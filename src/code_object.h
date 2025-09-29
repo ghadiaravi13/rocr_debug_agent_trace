@@ -28,74 +28,80 @@
    ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS WITH THE SOFTWARE.  */
 
-#ifndef _ROCM_DEBUG_AGENT_CODE_OBJECT_H
-#define _ROCM_DEBUG_AGENT_CODE_OBJECT_H 1
-
-#include <amd-dbgapi/amd-dbgapi.h>
-
-#include <cstddef>
-#include <map>
-#include <optional>
-#include <string>
-#include <utility>
-
-namespace amd::debug_agent
-{
-
-class code_object_t
-{
-private:
-  struct symbol_info_t
-  {
-    const std::string m_name;
-    amd_dbgapi_global_address_t m_value;
-    amd_dbgapi_size_t m_size;
-  };
-
-  void load_symbol_map ();
-  void load_debug_info ();
-
-public:
-  code_object_t (amd_dbgapi_code_object_id_t code_object_id);
-  code_object_t (code_object_t &&rhs);
-
-  ~code_object_t ();
-
-  void open ();
-  bool is_open () const { return m_fd.has_value (); }
-
-  amd_dbgapi_global_address_t load_address () const { return m_load_address; }
-  amd_dbgapi_size_t mem_size () const { return m_mem_size; }
-
-  std::optional<symbol_info_t>
-  find_symbol (amd_dbgapi_global_address_t address);
-
-  void disassemble (amd_dbgapi_architecture_id_t architecture_id,
-                    amd_dbgapi_global_address_t pc);
-
-  bool save (const std::string &directory) const;
-
-private:
-  amd_dbgapi_global_address_t m_load_address{ 0 };
-  amd_dbgapi_size_t m_mem_size{ 0 };
-  std::optional<int> m_fd;
-
-  std::optional<
-      std::map<amd_dbgapi_global_address_t, std::pair<std::string, size_t>>>
-      m_line_number_map;
-
-  std::optional<
-      std::map<amd_dbgapi_global_address_t, amd_dbgapi_global_address_t>>
-      m_pc_ranges_map;
-
-  std::optional<std::map<amd_dbgapi_global_address_t,
-                         std::pair<std::string, amd_dbgapi_size_t>>>
-      m_symbol_map;
-
-  std::string m_uri;
-  amd_dbgapi_code_object_id_t const m_code_object_id;
-};
-
-} /* namespace amd::debug_agent */
-
-#endif /* _ROCM_DEBUG_AGENT_CODE_OBJECT_H */
+   #ifndef _ROCM_DEBUG_AGENT_CODE_OBJECT_H
+   #define _ROCM_DEBUG_AGENT_CODE_OBJECT_H 1
+   
+   #include <amd-dbgapi/amd-dbgapi.h>
+   
+   #include <cstddef>
+   #include <map>
+   #include <optional>
+   #include <string>
+   #include <utility>
+   
+   namespace amd::debug_agent
+   {
+   
+   class code_object_t
+   {
+   private:
+     struct symbol_info_t
+     {
+       const std::string m_name;
+       amd_dbgapi_global_address_t m_value;
+       amd_dbgapi_size_t m_size;
+     };
+   
+     void load_symbol_map ();
+     void load_debug_info ();
+   
+   public:
+     code_object_t (amd_dbgapi_code_object_id_t code_object_id);
+     code_object_t (code_object_t &&rhs);
+   
+     ~code_object_t ();
+   
+     void open ();
+     bool is_open () const { return m_fd.has_value (); }
+   
+     amd_dbgapi_global_address_t load_address () const { return m_load_address; }
+     amd_dbgapi_size_t mem_size () const { return m_mem_size; }
+   
+     std::optional<symbol_info_t>
+     find_symbol (amd_dbgapi_global_address_t address);
+   
+     /* Find a symbol by exact name (mangled, as present in the ELF symbol table).
+        Returns the absolute address if found.  */
+     std::optional<amd_dbgapi_global_address_t>
+     find_symbol_by_name (const std::string &name);
+   
+     void disassemble (amd_dbgapi_architecture_id_t architecture_id,
+                       amd_dbgapi_global_address_t pc);
+   
+     bool save (const std::string &directory) const;
+   
+   private:
+     amd_dbgapi_global_address_t m_load_address{ 0 };
+     amd_dbgapi_size_t m_mem_size{ 0 };
+     std::optional<int> m_fd;
+   
+     std::optional<
+         std::map<amd_dbgapi_global_address_t, std::pair<std::string, size_t>>>
+         m_line_number_map;
+   
+     std::optional<
+         std::map<amd_dbgapi_global_address_t, amd_dbgapi_global_address_t>>
+         m_pc_ranges_map;
+   
+     std::optional<std::map<amd_dbgapi_global_address_t,
+                            std::pair<std::string, amd_dbgapi_size_t>>>
+         m_symbol_map;
+   
+     std::string m_uri;
+     amd_dbgapi_code_object_id_t const m_code_object_id;
+   };
+   
+   } /* namespace amd::debug_agent */
+   
+   #endif /* _ROCM_DEBUG_AGENT_CODE_OBJECT_H */
+   
