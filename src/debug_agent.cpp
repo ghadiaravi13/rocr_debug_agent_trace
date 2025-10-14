@@ -119,9 +119,18 @@
    std::optional<amd_dbgapi_global_address_t> g_kernel_entry_address;
    /* True while agent is holding all waves (waiting for manual continue).  */
    std::atomic<bool> g_hold_active{ false };
+
+   /*Global client process id*/
+   amd_dbgapi_client_process_id_t g_client_proc_id;
+   amd_dbgapi_process_id_t g_proc_id;
+    
    
    /* Global state accessed by the dbgapi callbacks.  */
-   std::optional<amd_dbgapi_breakpoint_id_t> g_rbrk_breakpoint_id;
+   // OLD: std::optional<amd_dbgapi_breakpoint_id_t> g_rbrk_breakpoint_id;
+   // NEW: Use a map to track all breakpoints
+   std::unordered_map<amd_dbgapi_global_address_t, amd_dbgapi_breakpoint_id_t> g_breakpoint_map;
+   std::optional<amd_dbgapi_breakpoint_id_t> g_rbrk_breakpoint_id;  // Keep for r_brk specifically
+   std::mutex g_breakpoint_map_mutex;  // Protect concurrent access
    struct
    {
      std::atomic<bool> guard;
@@ -149,6 +158,112 @@
        }
    
      return AMD_DBGAPI_STATUS_ERROR_INVALID_ARGUMENT;
+   }
+
+  //  amd_dbgapi_status_t
+  //  amd_dbgapi_set_breakpoint(
+  //      amd_dbgapi_global_address_t address,
+  //      amd_dbgapi_breakpoint_id_t breakpoint_id)
+  //  {  
+  //     /* we need to store the current instruction at address into a buffer
+  //     Then, we need to replace it with the breakpoint instruction.
+  //     We can query breakpoint instruction by using */
+      
+  //     // get the arch id
+  //     uint32_t elf_mach = EF_AMDGPU_MACH_AMDGCN_GFX950;
+  //     amd_dbgapi_architecture_id_t arch_id;
+  //     DBGAPI_CHECK(amd_dbgapi_get_architecture(elf_mach, &arch_id));
+
+      
+  //     // get the bp inst size
+  //     amd_dbgapi_size_t * bp_inst_size;
+  //     amd_dbgapi_status_t bp_size_st = amd_dbgapi_architecture_get_info(arch_id, AMD_DBGAPI_ARCHITECTURE_INFO_BREAKPOINT_INSTRUCTION_SIZE, sizeof(*bp_inst_size), bp_inst_size );
+  //     if(bp_size_st!=AMD_DBGAPI_STATUS_SUCCESS){
+  //       agent_log (log_level_t::info, "Error while getting bp inst size\n");
+  //       return bp_size_st;
+  //     }
+
+  //     //malloc memory for bp inst, using the bp inst size
+  //     void * bp_inst = malloc(*bp_inst_size);
+
+  //     // now we use that to get the bp instruction
+  //     amd_dbgapi_status_t bp_inst_st = amd_dbgapi_architecture_get_info(arch_id, AMD_DBGAPI_ARCHITECTURE_INFO_BREAKPOINT_INSTRUCTION, sizeof(*bp_inst), bp_inst );
+  //     if(bp_inst_st!=AMD_DBGAPI_STATUS_SUCCESS){
+  //       agent_log (log_level_t::info, "Error while getting bp inst\n");
+  //       return bp_inst_st;
+  //     }
+
+  //     // disassemble instruction - print it, and use it's size to allocate buffer
+  //     amd_dbgapi_size_t * inst_size;
+  //     amd_dbgapi_status_t inst_size_st = amd_dbgapi_architecture_get_info(arch_id, AMD_DBGAPI_ARCHITECTURE_INFO_LARGEST_INSTRUCTION_SIZE, sizeof(*inst_size), inst_size );
+  //     if(inst_size_st!=AMD_DBGAPI_STATUS_SUCCESS){
+  //       agent_log (log_level_t::info, "Error while getting inst size\n");
+  //       return inst_size_st;
+  //     }
+
+  //     // now let's insert the bp inst, and save the current inst at the address
+  //     void * curr_inst = amd_dbgapi_xfer_global_memory(g_client_proc_id, address, )
+
+  //     return AMD_DBGAPI_STATUS_SUCCESS;
+       
+      
+  //     return AMD_DBGAPI_STATUS_ERROR;
+  //  }
+
+   amd_dbgapi_status_t
+   amd_dbgapi_insert_breakpoint(
+       amd_dbgapi_client_process_id_t client_process_id,
+       amd_dbgapi_global_address_t address,
+       amd_dbgapi_breakpoint_id_t breakpoint_id)
+   {
+       if (address == _amdgpu_r_debug.r_brk)
+       {
+           g_rbrk_breakpoint_id.emplace(breakpoint_id);
+           return AMD_DBGAPI_STATUS_SUCCESS;
+       }
+      
+      //  // NEW: Allow any address breakpoint
+       
+      //  {
+      //      std::lock_guard<std::mutex> lock(g_breakpoint_map_mutex);
+      //      g_breakpoint_map[address] = breakpoint_id;
+      //      agent_log(log_level_t::info, 
+      //                "Inserted breakpoint at address 0x%lx (id=%ld)", 
+      //                address, breakpoint_id.handle);
+      //  }
+       return AMD_DBGAPI_STATUS_ERROR;
+   }
+
+   amd_dbgapi_status_t
+   amd_dbgapi_remove_breakpoint(
+       amd_dbgapi_client_process_id_t client_process_id,
+       amd_dbgapi_breakpoint_id_t breakpoint_id)
+   {
+       // Check if it's the r_brk breakpoint
+       if (g_rbrk_breakpoint_id.has_value()
+           && breakpoint_id.handle == g_rbrk_breakpoint_id.value().handle)
+       {
+           g_rbrk_breakpoint_id.reset();
+           return AMD_DBGAPI_STATUS_SUCCESS;
+       }
+       
+      //  // NEW: Check if it's in our breakpoint map
+      //  {
+      //      std::lock_guard<std::mutex> lock(g_breakpoint_map_mutex);
+      //      for (auto it = g_breakpoint_map.begin(); it != g_breakpoint_map.end(); ++it)
+      //      {
+      //          if (it->second.handle == breakpoint_id.handle)
+      //          {
+      //              agent_log(log_level_t::info,
+      //                        "Removed breakpoint at address 0x%lx (id=%ld)",
+      //                        it->first, breakpoint_id.handle);
+      //              g_breakpoint_map.erase(it);
+      //              return AMD_DBGAPI_STATUS_SUCCESS;
+      //          }
+      //      }
+      //  }
+       
+       return AMD_DBGAPI_STATUS_ERROR;
    }
    
    amd_dbgapi_status_t
@@ -194,30 +309,30 @@
      .client_process_get_info = amd_dbgapi_client_process_get_info,
    
      /* set_breakpoint callback.  */
-     .insert_breakpoint =
-         [] (amd_dbgapi_client_process_id_t client_process_id,
-             amd_dbgapi_global_address_t address,
-             amd_dbgapi_breakpoint_id_t breakpoint_id) {
-           if (address == _amdgpu_r_debug.r_brk)
-             {
-               g_rbrk_breakpoint_id.emplace (breakpoint_id);
-               return AMD_DBGAPI_STATUS_SUCCESS;
-             }
-           return AMD_DBGAPI_STATUS_ERROR;
-         },
+     .insert_breakpoint = amd_dbgapi_insert_breakpoint,
+        //  [] (amd_dbgapi_client_process_id_t client_process_id,
+        //      amd_dbgapi_global_address_t address,
+        //      amd_dbgapi_breakpoint_id_t breakpoint_id) {
+        //    if (address == _amdgpu_r_debug.r_brk)
+        //      {
+        //        g_rbrk_breakpoint_id.emplace (breakpoint_id);
+        //        return AMD_DBGAPI_STATUS_SUCCESS;
+        //      }
+        //    return AMD_DBGAPI_STATUS_ERROR;
+        //  },
    
      /* remove_breakpoint callback.  */
-     .remove_breakpoint =
-         [] (amd_dbgapi_client_process_id_t client_process_id,
-             amd_dbgapi_breakpoint_id_t breakpoint_id) {
-           if (g_rbrk_breakpoint_id.has_value ()
-               && breakpoint_id.handle == g_rbrk_breakpoint_id.value ().handle)
-             {
-               g_rbrk_breakpoint_id.reset ();
-               return AMD_DBGAPI_STATUS_SUCCESS;
-             }
-           return AMD_DBGAPI_STATUS_ERROR;
-         },
+     .remove_breakpoint = amd_dbgapi_remove_breakpoint,
+        //  [] (amd_dbgapi_client_process_id_t client_process_id,
+        //      amd_dbgapi_breakpoint_id_t breakpoint_id) {
+        //    if (g_rbrk_breakpoint_id.has_value ()
+        //        && breakpoint_id.handle == g_rbrk_breakpoint_id.value ().handle)
+        //      {
+        //        g_rbrk_breakpoint_id.reset ();
+        //        return AMD_DBGAPI_STATUS_SUCCESS;
+        //      }
+        //    return AMD_DBGAPI_STATUS_ERROR;
+        //  },
    
      /* xfer_global_memory callback.  */
      .xfer_global_memory = amd_dbgapi_xfer_global_memory,
@@ -831,6 +946,7 @@
                           code_object_map_t &code_object_map)
    {
      /* Consume all events available in the queue.  */
+     std::cout<<"Processing dbgapi events..."<<std::endl;
      bool need_print_waves = false;
      bool wave_need_resume = false;
      while (true)
@@ -849,6 +965,7 @@
              {
                /* Fetch the stop reason.  For a debug trap, we just resume
                   execution.  */
+               std::cout<<"Got a wave stop event"<<std::endl;
                amd_dbgapi_wave_stop_reasons_t stop_reason;
                amd_dbgapi_wave_id_t wave_id;
                DBGAPI_CHECK (amd_dbgapi_event_get_info (
@@ -857,6 +974,12 @@
                DBGAPI_CHECK (amd_dbgapi_wave_get_info (
                    wave_id, AMD_DBGAPI_WAVE_INFO_STOP_REASON,
                    sizeof (stop_reason), &stop_reason));
+                
+               if(stop_reason == AMD_DBGAPI_WAVE_STOP_REASON_BREAKPOINT) {
+                   agent_log (log_level_t::info, "Hit a breakpoint at wave_%ld", wave_id.handle);
+                   std::cout<<"Hit a breakpoint at wave_"<<wave_id.handle<<std::endl;
+                   wave_need_resume = true;
+               }
    
                if (stop_reason == AMD_DBGAPI_WAVE_STOP_REASON_DEBUG_TRAP)
                  {
@@ -933,27 +1056,85 @@
                           for the symbol now and program a breakpoint.  */
                        if (g_break_kernel_name && !g_kernel_entry_breakpoint_id)
                          {
-                           if (auto entry
-                               = code_object.find_symbol_by_name (
-                                   *g_break_kernel_name))
+                           amd_dbgapi_global_address_t entry = code_object.find_symbol_by_name (*g_break_kernel_name); 
+                           if (entry!=0)
                              {
-                               amd_dbgapi_breakpoint_id_t bp{};
-                               if (amd_dbgapi_breakpoint_insert (
-                                       process_id, *entry, &bp)
-                                   == AMD_DBGAPI_STATUS_SUCCESS)
-                                 {
-                                   g_kernel_entry_breakpoint_id = bp;
-                                   g_kernel_entry_address = *entry;
-                                   agent_log (log_level_t::info,
-                                              "Inserted kernel entry breakpoint at 0x%lx for %s",
-                                              *entry, g_break_kernel_name->c_str ());
-                                 }
-                               else
-                                 {
-                                   agent_warning (
-                                       "Failed to insert kernel entry breakpoint at 0x%lx for %s",
-                                       *entry, g_break_kernel_name->c_str ());
-                                 }
+                               // get the arch id
+                               uint32_t elf_mach = 0x04f; //EF_AMDGPU_MACH for gfx950; //_AMDGCN_GFX950;
+                               amd_dbgapi_architecture_id_t arch_id;
+                               DBGAPI_CHECK(amd_dbgapi_get_architecture(elf_mach, &arch_id));
+                    
+                               /* kernel name: Disassemble instructions around `pc`  */
+                               std::string dis_inst;
+                               std::optional<size_t> inst_size = code_object.disassemble_single (arch_id, entry, &dis_inst);
+                               // print the size
+                               if (inst_size) {
+                                   std::cout<<"Disassembly of "<<*g_break_kernel_name<<" at entry 0x"<<std::hex<<entry<<std::dec<<":\n"<<dis_inst<<", size:"<<*inst_size<<std::endl;
+                               } else {
+                                   std::cout<<"Failed to disassemble at 0x"<<std::hex<<entry<<std::endl;
+                               }
+                              // code_object.disassemble(arch_id, entry);
+
+                              // INSERTING BREAKPOINT INSTRUCTION AT ENTRY
+
+                              // 1. read the original instruction and store it in buffer
+                              void * orig_inst = malloc(*inst_size);
+                              size_t read_size = *inst_size;
+                              if (amd_dbgapi_status_t status = amd_dbgapi_read_memory (
+                                      g_proc_id, AMD_DBGAPI_WAVE_NONE, AMD_DBGAPI_LANE_NONE,
+                                      AMD_DBGAPI_ADDRESS_SPACE_GLOBAL, entry,
+                                      &read_size, orig_inst);
+                                  status != AMD_DBGAPI_STATUS_SUCCESS) {
+                                  agent_error ("amd_dbgapi_read_memory failed (rc=%d)", status);
+                              }
+
+                              // 2. get the arch specific breakpoint instruction
+                              amd_dbgapi_size_t bp_inst_size = 0;
+                              amd_dbgapi_status_t bp_size_st = amd_dbgapi_architecture_get_info(arch_id, AMD_DBGAPI_ARCHITECTURE_INFO_BREAKPOINT_INSTRUCTION_SIZE, sizeof(bp_inst_size), &bp_inst_size );
+                              if(bp_size_st!=AMD_DBGAPI_STATUS_SUCCESS){
+                                agent_log (log_level_t::info, "Error while getting bp inst size\n");
+                              }
+
+                              //malloc memory for bp inst, using the bp inst size
+                              void * bp_inst = malloc(bp_inst_size);
+
+                              // now we use that to get the bp instruction
+                              amd_dbgapi_status_t bp_inst_st = amd_dbgapi_architecture_get_info(arch_id, AMD_DBGAPI_ARCHITECTURE_INFO_BREAKPOINT_INSTRUCTION, bp_inst_size, bp_inst );
+                              if(bp_inst_st!=AMD_DBGAPI_STATUS_SUCCESS){
+                                agent_log (log_level_t::info, "Error while getting bp inst\n");
+                              }
+
+                              // 3. write the bp instruction at the entry point
+                              size_t write_size = bp_inst_size;
+                              if (amd_dbgapi_status_t status = amd_dbgapi_write_memory (
+                                      g_proc_id, AMD_DBGAPI_WAVE_NONE, AMD_DBGAPI_LANE_NONE,
+                                      AMD_DBGAPI_ADDRESS_SPACE_GLOBAL, entry,
+                                      &write_size, bp_inst);
+                                  status != AMD_DBGAPI_STATUS_SUCCESS) {
+                                  agent_error ("amd_dbgapi_write_memory failed (rc=%d)", status);
+                              }
+
+                              // std::cout<<"Inserted breakpoint instruction \n"<<std::endl;
+
+                              
+                              
+                              //  amd_dbgapi_breakpoint_id_t bp{};
+                              //  if (amd_dbgapi_insert_breakpoint (
+                              //          g_client_proc_id, *entry, bp)
+                              //      == AMD_DBGAPI_STATUS_SUCCESS)
+                              //    {
+                              //      g_kernel_entry_breakpoint_id = bp;
+                              //      g_kernel_entry_address = *entry;
+                              //      agent_log (log_level_t::info,
+                              //                 "Inserted kernel entry breakpoint at 0x%lx for %s",
+                              //                 *entry, g_break_kernel_name->c_str ());
+                              //    }
+                              //  else
+                              //    {
+                              //      agent_warning (
+                              //          "Failed to insert kernel entry breakpoint at 0x%lx for %s",
+                              //          *entry, g_break_kernel_name->c_str ());
+                              //    }
                              }
                          }
    
@@ -1048,6 +1229,8 @@
                  break;
    
                case AMD_DBGAPI_WAVE_STOP_REASON_BREAKPOINT:
+                 std::cout<<"Hit breakpoint at wave "<<wave_id.handle<<std::endl;
+               
                case AMD_DBGAPI_WAVE_STOP_REASON_WATCHPOINT:
                case AMD_DBGAPI_WAVE_STOP_REASON_ASSERT_TRAP:
                case AMD_DBGAPI_WAVE_STOP_REASON_TRAP:
@@ -1133,6 +1316,10 @@
      DBGAPI_CHECK (amd_dbgapi_process_attach (
          reinterpret_cast<amd_dbgapi_client_process_id_t> (&self_mem_fd),
          &process_id));
+     
+     /* setting global client proc id*/
+     g_client_proc_id = reinterpret_cast<amd_dbgapi_client_process_id_t> (&self_mem_fd);
+     g_proc_id = process_id;
    
      /* Runtime has been activated just before tools are loaded.  We do expect
         a runtime loaded event to be ready to be consumed.  */
@@ -1411,17 +1598,17 @@
      g_rbrk_sync.guard.store (false, std::memory_order::memory_order_release);
    }
    
-   void
-   DebugAgentWorker::continue_execution () const
-   {
-     agent_assert (m_write_pipe != -1);
-     char msg = 'c';
-     ssize_t written = write (m_write_pipe, &msg, 1);
-     if (written == -1)
-       agent_error ("Failed to notify RocrDebugAgent thread (%s)",
-                    strerror (errno));
-     agent_assert (written == 1);
-   }
+  //  void
+  //  DebugAgentWorker::continue_execution () const
+  //  {
+  //    agent_assert (m_write_pipe != -1);
+  //    char msg = 'c';
+  //    ssize_t written = write (m_write_pipe, &msg, 1);
+  //    if (written == -1)
+  //      agent_error ("Failed to notify RocrDebugAgent thread (%s)",
+  //                   strerror (errno));
+  //    agent_assert (written == 1);
+  //  }
    
    DebugAgentWorker::~DebugAgentWorker ()
    {
@@ -1717,21 +1904,21 @@
          sigaction (SIGQUIT, &sig_action, nullptr);
        }
    
-     /* Also install SIGUSR1 as a manual continue signal when hold is active. */
-     {
-       struct sigaction sig_action;
+    //  /* Also install SIGUSR1 as a manual continue signal when hold is active. */
+    //  {
+    //    struct sigaction sig_action;
    
-       memset (&sig_action, '\0', sizeof (sig_action));
-       sigemptyset (&sig_action.sa_mask);
+    //    memset (&sig_action, '\0', sizeof (sig_action));
+    //    sigemptyset (&sig_action.sa_mask);
    
-       sig_action.sa_sigaction = [] (int signal, siginfo_t *, void *) {
-         if (g_hold_active.load (std::memory_order::memory_order_relaxed))
-           get_worker_thread ().continue_execution ();
-       };
+    //    sig_action.sa_sigaction = [] (int signal, siginfo_t *, void *) {
+    //      if (g_hold_active.load (std::memory_order::memory_order_relaxed))
+    //        get_worker_thread ().continue_execution ();
+    //    };
    
-       sig_action.sa_flags = SA_RESTART;
-       sigaction (SIGUSR1, &sig_action, nullptr);
-     }
+    //    sig_action.sa_flags = SA_RESTART;
+    //    sigaction (SIGUSR1, &sig_action, nullptr);
+    //  }
    
      CoreApiTable *core_table = reinterpret_cast<HsaApiTable *> (table)->core_;
    

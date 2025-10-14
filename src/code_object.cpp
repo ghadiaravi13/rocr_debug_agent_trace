@@ -131,14 +131,14 @@
      return {};
    }
    
-   std::optional<amd_dbgapi_global_address_t>
+   amd_dbgapi_global_address_t
    code_object_t::find_symbol_by_name (const std::string &name)
    {
      /* Load the symbol table.  */
      load_symbol_map ();
    
      if (!m_symbol_map)
-       return std::nullopt;
+       return 0;
    
      for (const auto &it : *m_symbol_map)
        {
@@ -147,7 +147,7 @@
            return it.first; /* absolute address */
        }
    
-     return std::nullopt;
+     return 0;
    }
    
    void
@@ -515,6 +515,128 @@
          cu_offset = next_offset;
        }
    }
+   
+   std::optional<size_t>
+    code_object_t::disassemble_single (amd_dbgapi_architecture_id_t architecture_id,
+                                      amd_dbgapi_global_address_t address,
+                                      std::string *instruction_text,
+                                      bool symbolize,
+                                      bool print_on_success)
+    {
+      amd_dbgapi_process_id_t process_id;
+      if (amd_dbgapi_code_object_get_info (m_code_object_id,
+                                          AMD_DBGAPI_CODE_OBJECT_INFO_PROCESS,
+                                          sizeof (process_id), &process_id)
+          != AMD_DBGAPI_STATUS_SUCCESS)
+        {
+          agent_warning ("disassemble_single: could not get process id");
+          return std::nullopt;
+        }
+
+      amd_dbgapi_size_t largest_instruction_size;
+      if (amd_dbgapi_architecture_get_info (
+              architecture_id,
+              AMD_DBGAPI_ARCHITECTURE_INFO_LARGEST_INSTRUCTION_SIZE,
+              sizeof (largest_instruction_size), &largest_instruction_size)
+          != AMD_DBGAPI_STATUS_SUCCESS)
+        {
+          agent_warning ("disassemble_single: could not get largest instruction size");
+          return std::nullopt;
+        }
+      if (!largest_instruction_size)
+        return std::nullopt;
+
+      std::vector<uint8_t> buffer (largest_instruction_size);
+      amd_dbgapi_size_t bytes_available = buffer.size ();
+      if (amd_dbgapi_read_memory (process_id,
+                                  AMD_DBGAPI_WAVE_NONE,
+                                  AMD_DBGAPI_LANE_NONE,
+                                  AMD_DBGAPI_ADDRESS_SPACE_GLOBAL,
+                                  address, &bytes_available, buffer.data ())
+          != AMD_DBGAPI_STATUS_SUCCESS
+          || bytes_available == 0)
+        {
+          agent_warning ("disassemble_single: cannot read memory at 0x%lx",
+                        (unsigned long)address);
+          return std::nullopt;
+        }
+
+      auto symbolizer = [] (amd_dbgapi_symbolizer_id_t symbolizer_id,
+                            amd_dbgapi_global_address_t addr,
+                            char **symbol_text) -> amd_dbgapi_status_t {
+        auto &code_object = *reinterpret_cast<code_object_t *> (symbolizer_id);
+        std::ostringstream oss;
+        oss << "0x" << std::hex << addr;
+        if (auto sym = code_object.find_symbol (addr))
+          {
+            oss << " <" << sym->m_name << "+" << std::dec
+                << (addr - sym->m_value) << ">";
+          }
+        *symbol_text = ::strdup (oss.str ().c_str ());
+        return AMD_DBGAPI_STATUS_SUCCESS;
+      };
+
+      char *val_cstr = nullptr;
+      amd_dbgapi_size_t inst_size = bytes_available;
+
+      amd_dbgapi_status_t status = amd_dbgapi_disassemble_instruction (
+          architecture_id,
+          address,
+          &inst_size,
+          buffer.data (),
+          instruction_text ? &val_cstr : nullptr,
+          (symbolize && instruction_text)
+            ? reinterpret_cast<amd_dbgapi_symbolizer_id_t> (this)
+            : amd_dbgapi_symbolizer_id_t{},
+          symbolizer);
+
+      if (status != AMD_DBGAPI_STATUS_SUCCESS)
+        {
+          if (val_cstr) free (val_cstr);
+          agent_warning ("disassemble_single: disassembler failed at 0x%lx",
+                        (unsigned long)address);
+          return std::nullopt;
+        }
+
+      if (instruction_text)
+        {
+          if (val_cstr)
+            {
+              instruction_text->assign (val_cstr);
+              free (val_cstr);
+            }
+          else
+            {
+              instruction_text->clear ();
+            }
+
+          if (print_on_success)
+            {
+              // Symbol+offset for printing: reuse existing find_symbol (even if we
+              // skipped symbolization for the textual form).
+              std::ostringstream line;
+              line << "0x" << std::hex << address;
+
+              if (symbolize)
+                {
+                  if (auto sym = find_symbol (address))
+                    {
+                      line << " <";
+                      if (address >= sym->m_value)
+                        line << "+" << std::dec << (address - sym->m_value);
+                      else
+                        line << "-" << std::dec << (sym->m_value - address);
+                      line << ">";
+                    }
+                }
+
+              line << ": (" << std::dec << inst_size << "B)  " << *instruction_text;
+              agent_out << line.str () << std::endl;
+            }
+        }
+
+      return static_cast<size_t> (inst_size);
+    }
    
    void
    code_object_t::disassemble (amd_dbgapi_architecture_id_t architecture_id,

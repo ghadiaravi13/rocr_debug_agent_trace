@@ -72,12 +72,18 @@
    
      /* Find a symbol by exact name (mangled, as present in the ELF symbol table).
         Returns the absolute address if found.  */
-     std::optional<amd_dbgapi_global_address_t>
+     amd_dbgapi_global_address_t
      find_symbol_by_name (const std::string &name);
    
      void disassemble (amd_dbgapi_architecture_id_t architecture_id,
                        amd_dbgapi_global_address_t pc);
-   
+     std::optional<size_t>
+     disassemble_single (amd_dbgapi_architecture_id_t architecture_id,
+                         amd_dbgapi_global_address_t address,
+                         std::string *instruction_text = nullptr,
+                         bool symbolize = true,
+                         bool print_on_success = true);
+     
      bool save (const std::string &directory) const;
    
    private:
