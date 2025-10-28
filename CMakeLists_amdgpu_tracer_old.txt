@@ -1,0 +1,187 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(rocm-debug-agent VERSION 2.1.0)
+
+include(GNUInstallDirs)
+
+# Collect all sources
+file(GLOB SOURCES "src/*.cpp")
+
+# Build an executable instead of a shared library
+add_executable(amdgpu_trace_cpp ${SOURCES})
+
+set_target_properties(amdgpu_trace_cpp PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+  CXX_EXTENSIONS OFF
+  NO_SYSTEM_FROM_IMPORTED ON
+)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
+
+find_package(amd-dbgapi REQUIRED CONFIG
+  PATHS
+    /opt/rocm/
+  PATH_SUFFIXES
+    cmake/amd-dbgapi
+    lib/cmake/amd-dbgapi
+)
+
+find_package(ROCR REQUIRED)
+find_package(LibElf REQUIRED)
+find_package(LibDw REQUIRED)
+find_package(Threads REQUIRED)
+
+target_include_directories(amdgpu_trace_cpp
+  SYSTEM PRIVATE ${ROCR_INCLUDES} ${LIBELF_INCLUDES} ${LIBDW_INCLUDES}
+)
+
+# Common compile options/definitions
+# target_compile_options(amdgpu_trace_cpp PRIVATE -Werror -Wall -fno-rtti -Wno-attributes -fvisibility=hidden)
+target_compile_options(amdgpu_trace_cpp PRIVATE -Wall -fno-rtti -Wno-attributes -fvisibility=hidden)
+target_compile_definitions(amdgpu_trace_cpp PRIVATE AMD_INTERNAL_BUILD _GNU_SOURCE __STDC_LIMIT_MACROS __STDC_CONSTANT_MACROS)
+
+# Build info (unchanged)
+if(DEFINED ENV{ROCM_BUILD_ID})
+  set(build_info $ENV{ROCM_BUILD_ID})
+else()
+  string(TIMESTAMP NOW "%Y%m%dT%H%M%S")
+  set(build_info developer-build-${NOW})
+
+  if(DEFINED ENV{USER})
+    set(build_info ${build_info}-$ENV{USER})
+  endif()
+
+  find_package(Git)
+  if(GIT_FOUND)
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+      WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+      OUTPUT_VARIABLE build_revision
+      ERROR_QUIET
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  else()
+    message(STATUS "GIT not found")
+  endif()
+
+  if(DEFINED build_revision)
+    set(build_info ${build_info}-git-${build_revision})
+  endif()
+endif()
+
+# Check for memfd_create headers and libs
+include(CheckCSourceCompiles)
+check_c_source_compiles("
+  #define _GNU_SOURCE
+  #include <sys/mman.h>
+  int main() { return memfd_create (\"cmake_test\", 0); }
+  " HAVE_MEMFD_CREATE)
+if (HAVE_MEMFD_CREATE)
+  add_definitions(-DHAVE_MEMFD_CREATE)
+endif()
+
+# Link libraries (drop the shared-library version script)
+target_link_libraries(amdgpu_trace_cpp
+  PRIVATE amd-dbgapi
+          ${ROCR_LIBRARIES}
+          ${LIBELF_LIBRARIES}
+          ${LIBDW_LIBRARIES}
+          Threads::Threads
+          ${CMAKE_DL_LIBS}
+)
+
+# If you need runtime paths for ROCm libs, add them here (optional)
+# Adjust these paths if your ROCm is in a different location
+target_link_options(amdgpu_trace_cpp PRIVATE
+  -Wl,-rpath,/opt/rocm/lib
+  -Wl,-rpath,/opt/rocm-7.0.1/lib
+)
+
+# Install the executable into bin
+install(TARGETS amdgpu_trace_cpp
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  COMPONENT runtime
+)
+
+install(FILES LICENSE.txt README.md
+  DESTINATION ${CMAKE_INSTALL_DOCDIR}
+  COMPONENT runtime
+)
+
+# Tests and packaging remain; adjust names/descriptions to reflect executable if desired
+enable_testing()
+add_subdirectory(test)
+
+# Packaging metadata (kept mostly as-is, but the description changed to reflect an executable)
+set(CPACK_PACKAGE_NAME rocm-debug-agent)
+set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc")
+set(CPACK_PACKAGE_CONTACT "ROCm Debugger Support <rocm-gdb.support@amd.com>")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Radeon Open Compute Debug Agent (executable)")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
+
+if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
+  set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}.$ENV{ROCM_LIBPATCH_VERSION}")
+  message("Using CPACK_PACKAGE_VERSION ${CPACK_PACKAGE_VERSION}")
+endif()
+
+if(DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE})
+  set(CPACK_RPM_PACKAGE_RELEASE $ENV{CPACK_RPM_PACKAGE_RELEASE})
+else()
+  set(CPACK_RPM_PACKAGE_RELEASE "local")
+endif()
+message("Using CPACK_RPM_PACKAGE_RELEASE ${CPACK_RPM_PACKAGE_RELEASE}")
+
+execute_process(COMMAND rpm --eval %{?dist}
+                 RESULT_VARIABLE PROC_RESULT
+                 OUTPUT_VARIABLE EVAL_RESULT
+                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(PROC_RESULT EQUAL "0" AND NOT EVAL_RESULT STREQUAL "")
+  string(APPEND CPACK_RPM_PACKAGE_RELEASE "%{?dist}")
+endif()
+
+set(CPACK_RPM_COMPONENT_INSTALL ON)
+set(CPACK_RPM_FILE_NAME "RPM-DEFAULT")
+set(CPACK_RPM_RUNTIME_PACKAGE_NAME "rocm-debug-agent")
+# Dependencies can remain the same; this is now an executable package
+set(CPACK_RPM_RUNTIME_PACKAGE_REQUIRES "rocm-dbgapi, hsa-rocr, rocm-core")
+set(CPACK_RPM_TESTS_PACKAGE_REQUIRES "rocm-debug-agent, rocm-core")
+
+if(DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
+  set(CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE})
+else()
+  set(CPACK_DEBIAN_PACKAGE_RELEASE ${build_info})
+endif()
+message("Using CPACK_DEBIAN_PACKAGE_RELEASE ${CPACK_DEBIAN_PACKAGE_RELEASE}")
+
+set(CPACK_DEB_COMPONENT_INSTALL ON)
+set(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
+set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "rocm-debug-agent")
+set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "rocm-dbgapi, hsa-rocr, rocm-core")
+set(CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS "rocm-debug-agent, rocm-core")
+
+if(NOT ROCM_DEP_ROCMCORE)
+    string(REGEX REPLACE ",? ?rocm-core" "" CPACK_RPM_RUNTIME_PACKAGE_REQUIRES ${CPACK_RPM_RUNTIME_PACKAGE_REQUIRES})
+    string(REGEX REPLACE ",? ?rocm-core" "" CPACK_RPM_TESTS_PACKAGE_REQUIRES ${CPACK_RPM_TESTS_PACKAGE_REQUIRES})
+    string(REGEX REPLACE ",? ?rocm-core" "" CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS ${CPACK_DEBIAN_TESTS_PACKAGE_DEPENDS})
+    string(REGEX REPLACE ",? ?rocm-core" "" CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS ${CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS})
+endif()
+
+# Components
+set(CPACK_COMPONENTS_ALL runtime tests)
+
+if (NOT CPack_CMake_INCLUDED)
+  include(CPack)
+endif()
+
+cpack_add_component(runtime
+  DISPLAY_NAME "Runtime"
+  DESCRIPTION "Executable for the ROCdebug-agent"
+)
+
+cpack_add_component(tests
+  DISPLAY_NAME "Tests"
+  DESCRIPTION "Tests for the ROCdebug-agent"
+  DEPENDS runtime
+)
