@@ -34,7 +34,6 @@ CMakeFiles/rocm-debug-agent.dir/src/code_object.cpp.o: /home/rghadia/rocr_debug_
   /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/select2.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
@@ -119,7 +118,6 @@ CMakeFiles/rocm-debug-agent.dir/src/code_object.cpp.o: /home/rghadia/rocr_debug_
   /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2.h \
   /usr/include/c++/11/cstdint \
   /usr/include/c++/11/bits/localefwd.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/c++locale.h \
@@ -158,9 +156,7 @@ CMakeFiles/rocm-debug-agent.dir/src/code_object.cpp.o: /home/rghadia/rocr_debug_
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
   /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
   /usr/include/c++/11/bits/std_abs.h \
   /usr/include/c++/11/cstdio \
   /usr/include/stdio.h \
@@ -169,8 +165,6 @@ CMakeFiles/rocm-debug-agent.dir/src/code_object.cpp.o: /home/rghadia/rocr_debug_
   /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
   /usr/include/c++/11/cerrno \
   /usr/include/errno.h \
   /usr/include/x86_64-linux-gnu/bits/errno.h \
@@ -225,12 +219,9 @@ CMakeFiles/rocm-debug-agent.dir/src/code_object.cpp.o: /home/rghadia/rocr_debug_
   /usr/include/linux/falloc.h \
   /usr/include/x86_64-linux-gnu/bits/stat.h \
   /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
-  /usr/include/x86_64-linux-gnu/bits/fcntl2.h \
   /usr/include/c++/11/stdlib.h \
   /usr/include/string.h \
   /usr/include/strings.h \
-  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
-  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h \
   /usr/lib/gcc/x86_64-linux-gnu/11/include/syslimits.h \
   /usr/include/limits.h \
@@ -251,7 +242,6 @@ CMakeFiles/rocm-debug-agent.dir/src/code_object.cpp.o: /home/rghadia/rocr_debug_
   /usr/include/x86_64-linux-gnu/bits/confname.h \
   /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
   /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
-  /usr/include/x86_64-linux-gnu/bits/unistd.h \
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/linux/close_range.h \
   /usr/include/c++/11/algorithm \
@@ -337,7 +327,6 @@ CMakeFiles/rocm-debug-agent.dir/src/debug_agent.cpp.o: /home/rghadia/rocr_debug_
   /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
   /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
-  /usr/include/x86_64-linux-gnu/bits/select2.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
@@ -422,7 +411,6 @@ CMakeFiles/rocm-debug-agent.dir/src/debug_agent.cpp.o: /home/rghadia/rocr_debug_
   /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2.h \
   /usr/include/c++/11/cstdint \
   /usr/include/c++/11/bits/localefwd.h \
   /usr/include/x86_64-linux-gnu/c++/11/bits/c++locale.h \
@@ -461,9 +449,7 @@ CMakeFiles/rocm-debug-agent.dir/src/debug_agent.cpp.o: /home/rghadia/rocr_debug_
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
   /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
   /usr/include/c++/11/bits/std_abs.h \
   /usr/include/c++/11/cstdio \
   /usr/include/stdio.h \
@@ -472,8 +458,6 @@ CMakeFiles/rocm-debug-agent.dir/src/debug_agent.cpp.o: /home/rghadia/rocr_debug_
   /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
   /usr/include/c++/11/cerrno \
   /usr/include/errno.h \
   /usr/include/x86_64-linux-gnu/bits/errno.h \
@@ -526,8 +510,6 @@ CMakeFiles/rocm-debug-agent.dir/src/debug_agent.cpp.o: /home/rghadia/rocr_debug_
   /opt/rocm/include/hsa/hsa_amd_tool.h \
   /usr/include/string.h \
   /usr/include/strings.h \
-  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
-  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
   /usr/include/assert.h \
   /opt/rocm/include/hsa/hsa_ext_amd.h \
   /usr/include/dlfcn.h \
@@ -540,7 +522,6 @@ CMakeFiles/rocm-debug-agent.dir/src/debug_agent.cpp.o: /home/rghadia/rocr_debug_
   /usr/include/linux/falloc.h \
   /usr/include/x86_64-linux-gnu/bits/stat.h \
   /usr/include/x86_64-linux-gnu/bits/struct_stat.h \
-  /usr/include/x86_64-linux-gnu/bits/fcntl2.h \
   /usr/include/getopt.h \
   /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
   /usr/include/x86_64-linux-gnu/bits/getopt_ext.h \
@@ -567,7 +548,6 @@ CMakeFiles/rocm-debug-agent.dir/src/debug_agent.cpp.o: /home/rghadia/rocr_debug_
   /usr/include/x86_64-linux-gnu/bits/environments.h \
   /usr/include/x86_64-linux-gnu/bits/confname.h \
   /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
-  /usr/include/x86_64-linux-gnu/bits/unistd.h \
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/linux/close_range.h \
   /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
@@ -701,7 +681,6 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
   /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2.h \
   /usr/include/c++/11/exception \
   /usr/include/c++/11/bits/exception.h \
   /usr/include/c++/11/bits/exception_ptr.h \
@@ -807,11 +786,8 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
   /usr/include/x86_64-linux-gnu/sys/select.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
   /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
-  /usr/include/x86_64-linux-gnu/bits/select2.h \
   /usr/include/alloca.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
   /usr/include/c++/11/bits/std_abs.h \
   /usr/include/c++/11/cstdio \
   /usr/include/stdio.h \
@@ -820,8 +796,6 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
   /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
   /usr/include/c++/11/cerrno \
   /usr/include/errno.h \
   /usr/include/x86_64-linux-gnu/bits/errno.h \
@@ -924,6 +898,8 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/assert.h:
 
+/opt/rocm/include/hsa/hsa_amd_tool.h:
+
 /opt/rocm/include/hsa/hsa_ext_finalize.h:
 
 /opt/rocm/include/hsa/hsa_ext_amd.h:
@@ -960,6 +936,8 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/c++/11/bits/stl_raw_storage_iter.h:
 
+/usr/include/c++/11/memory:
+
 /usr/include/c++/11/limits:
 
 /usr/include/c++/11/bits/stream_iterator.h:
@@ -990,24 +968,6 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/c++/11/vector:
 
-/usr/include/c++/11/bits/unordered_map.h:
-
-/usr/include/x86_64-linux-gnu/bits/statx-generic.h:
-
-/usr/include/c++/11/bits/hashtable_policy.h:
-
-/usr/include/c++/11/bits/hashtable.h:
-
-/usr/include/c++/11/unordered_map:
-
-/usr/include/linux/stddef.h:
-
-/usr/include/c++/11/bits/refwrap.h:
-
-/usr/include/c++/11/bits/std_function.h:
-
-/usr/include/c++/11/bits/stl_tempbuf.h:
-
 /usr/include/locale.h:
 
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h:
@@ -1034,13 +994,9 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h:
 
-/opt/rocm/include/hsa/hsa_amd_tool.h:
-
-/usr/include/x86_64-linux-gnu/bits/strings_fortified.h:
+/usr/include/x86_64-linux-gnu/bits/types/wint_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/floatn-common.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/wint_t.h:
 
 /usr/include/gelf.h:
 
@@ -1086,8 +1042,6 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/c++/11/fstream:
 
-/usr/include/x86_64-linux-gnu/bits/wchar2.h:
-
 /usr/include/x86_64-linux-gnu/asm/bitsperlong.h:
 
 /usr/include/c++/11/backward/binders.h:
@@ -1126,19 +1080,9 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/c++/11/bits/stl_tree.h:
 
-/usr/include/c++/11/memory:
+/usr/include/c++/11/locale:
 
-/usr/include/x86_64-linux-gnu/bits/string_fortified.h:
-
-/usr/include/link.h:
-
-/usr/include/c++/11/bits/hash_bytes.h:
-
-/usr/include/c++/11/bits/move.h:
-
-/home/rghadia/rocr_debug_agent_trace/src/logging.cpp:
-
-/usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h:
+/usr/include/ctype.h:
 
 /usr/include/c++/11/ext/new_allocator.h:
 
@@ -1194,15 +1138,29 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/c++/11/cctype:
 
+/usr/include/c++/11/unordered_map:
+
 /usr/include/x86_64-linux-gnu/bits/stdint-intn.h:
 
 /usr/include/x86_64-linux-gnu/bits/types.h:
 
 /usr/include/x86_64-linux-gnu/bits/mman-linux.h:
 
+/usr/include/link.h:
+
+/usr/include/c++/11/bits/hash_bytes.h:
+
+/usr/include/c++/11/bits/move.h:
+
+/home/rghadia/rocr_debug_agent_trace/src/logging.cpp:
+
+/usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h:
+
 /usr/include/c++/11/bits/stl_iterator.h:
 
 /usr/include/x86_64-linux-gnu/bits/struct_mutex.h:
+
+/usr/include/c++/11/cwchar:
 
 /usr/include/x86_64-linux-gnu/bits/statx.h:
 
@@ -1223,6 +1181,8 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 /usr/include/x86_64-linux-gnu/bits/select.h:
 
 /usr/include/x86_64-linux-gnu/bits/time.h:
+
+/usr/include/x86_64-linux-gnu/bits/timesize.h:
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/cpu_defines.h:
 
@@ -1322,8 +1282,6 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h:
 
-/usr/include/x86_64-linux-gnu/bits/stdlib.h:
-
 /usr/include/x86_64-linux-gnu/asm/errno.h:
 
 /usr/include/c++/11/bits/stl_iterator_base_types.h:
@@ -1334,10 +1292,6 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h:
 
-/usr/include/c++/11/cwchar:
-
-/usr/include/x86_64-linux-gnu/bits/select2.h:
-
 /usr/include/c++/11/bits/invoke.h:
 
 /usr/include/x86_64-linux-gnu/bits/stdio_lim.h:
@@ -1347,6 +1301,10 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 /usr/include/x86_64-linux-gnu/bits/fcntl-linux.h:
 
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h:
+
+/usr/include/c++/11/bits/ostream_insert.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
 
 /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
 
@@ -1359,6 +1317,10 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 /usr/include/c++/11/optional:
 
 /usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
+
+/usr/include/c++/11/bits/std_function.h:
+
+/usr/include/c++/11/bits/stl_tempbuf.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/clock_t.h:
 
@@ -1384,14 +1346,6 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h:
 
-/usr/include/c++/11/locale:
-
-/usr/include/ctype.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h:
-
-/usr/include/c++/11/bits/ostream_insert.h:
-
 /usr/include/x86_64-linux-gnu/c++/11/bits/gthr.h:
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/gthr-default.h:
@@ -1400,11 +1354,19 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/x86_64-linux-gnu/bits/sched.h:
 
+/usr/include/c++/11/bits/unordered_map.h:
+
 /usr/include/x86_64-linux-gnu/asm/posix_types_64.h:
 
 /usr/include/x86_64-linux-gnu/bits/cpu-set.h:
 
 /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h:
+
+/usr/include/c++/11/bits/stl_bvector.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/clockid_t.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h:
 
@@ -1428,33 +1390,11 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/alloca.h:
 
-/usr/include/c++/11/bits/stl_bvector.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/clockid_t.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_statx_timestamp.h:
-
-/usr/include/c++/11/cwctype:
-
 /usr/include/c++/11/cstdio:
 
 /usr/include/stdio.h:
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/cxxabi_tweaks.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdio.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdio2.h:
-
-/usr/include/c++/11/bits/this_thread_sleep.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
-
-/usr/include/c++/11/bits/locale_facets.tcc:
 
 /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h:
 
@@ -1492,10 +1432,6 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/c++/11/bits/ios_base.h:
 
-/usr/include/x86_64-linux-gnu/bits/timesize.h:
-
-/usr/include/x86_64-linux-gnu/bits/fcntl2.h:
-
 /usr/include/c++/11/bits/locale_classes.h:
 
 /home/rghadia/rocr_debug_agent_trace/src/code_object.h:
@@ -1514,10 +1450,6 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/c++/11/stdexcept:
 
-/usr/include/string.h:
-
-/usr/include/c++/11/bits/streambuf.tcc:
-
 /usr/include/c++/11/bits/uniform_int_dist.h:
 
 /usr/include/c++/11/bits/basic_ios.h:
@@ -1526,11 +1458,21 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/c++/11/bits/locale_facets.h:
 
+/usr/include/x86_64-linux-gnu/bits/types/struct_statx_timestamp.h:
+
+/usr/include/c++/11/cwctype:
+
 /usr/include/c++/11/bits/streambuf_iterator.h:
 
 /usr/include/linux/types.h:
 
 /usr/include/x86_64-linux-gnu/c++/11/bits/ctype_inline.h:
+
+/usr/include/c++/11/bits/this_thread_sleep.h:
+
+/usr/include/x86_64-linux-gnu/bits/types/struct_tm.h:
+
+/usr/include/c++/11/bits/locale_facets.tcc:
 
 /usr/include/c++/11/bits/enable_special_members.h:
 
@@ -1576,6 +1518,10 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/c++/11/stdlib.h:
 
+/usr/include/c++/11/bits/streambuf.tcc:
+
+/usr/include/string.h:
+
 /usr/lib/gcc/x86_64-linux-gnu/11/include/limits.h:
 
 /usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
@@ -1602,8 +1548,6 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 
 /usr/include/x86_64-linux-gnu/bits/getopt_core.h:
 
-/usr/include/x86_64-linux-gnu/bits/unistd.h:
-
 /usr/include/x86_64-linux-gnu/bits/unistd_ext.h:
 
 /usr/include/asm-generic/int-ll64.h:
@@ -1617,3 +1561,13 @@ CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o: /home/rghadia/rocr_debug_agen
 /usr/include/c++/11/bits/std_abs.h:
 
 /usr/include/c++/11/bits/stl_heap.h:
+
+/usr/include/linux/stddef.h:
+
+/usr/include/c++/11/bits/refwrap.h:
+
+/usr/include/c++/11/bits/hashtable.h:
+
+/usr/include/x86_64-linux-gnu/bits/statx-generic.h:
+
+/usr/include/c++/11/bits/hashtable_policy.h:

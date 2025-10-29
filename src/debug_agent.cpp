@@ -960,6 +960,8 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
       if (event_kind == AMD_DBGAPI_EVENT_KIND_NONE)
         break;
 
+      std::cout<<"Got event kind: "<<event_kind<<std::endl;
+
       switch (event_kind)
         {
         case AMD_DBGAPI_EVENT_KIND_WAVE_STOP:
@@ -982,17 +984,16 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
                 wave_need_resume = true;
             }
 
-            // if (stop_reason == AMD_DBGAPI_WAVE_STOP_REASON_DEBUG_TRAP)
-            //   {
-            //     /* This wave will be silently resumed at the end of this
-            //       procedure.  */
-            //     wave_need_resume = true;
-            //   }
-            if(stop_reason == AMD_DBGAPI_WAVE_STOP_REASON_TRAP || 
-               stop_reason == AMD_DBGAPI_WAVE_STOP_REASON_DEBUG_TRAP ||
-               stop_reason == AMD_DBGAPI_WAVE_STOP_REASON_ASSERT_TRAP){
+            if (stop_reason == AMD_DBGAPI_WAVE_STOP_REASON_DEBUG_TRAP)
+              {
+                /* This wave will be silently resumed at the end of this
+                  procedure.  */
+                wave_need_resume = true;
+              }
+            if(stop_reason == AMD_DBGAPI_WAVE_STOP_REASON_TRAP){
               
               wave_need_resume = true;
+              std::cout<<"Stop reason trap "<<stop_reason<<std::endl;
               
               amd_dbgapi_global_address_t pc;
               if (amd_dbgapi_wave_get_info (wave_id, 
@@ -1000,6 +1001,7 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
                                             sizeof (pc), 
                                             &pc) == AMD_DBGAPI_STATUS_SUCCESS){
                   //disassemble instruction at pc
+                  std::cout<<"PC: "<<std::hex<<pc<<std::dec<<std::endl;
                   amd_dbgapi_code_object_id_t *code_objects_ids;
                   size_t code_object_count;
                   DBGAPI_CHECK (amd_dbgapi_process_code_object_list (
@@ -1008,11 +1010,11 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
                   code_object_map_t fresh_map;
                   for (size_t i = 0; i < code_object_count; ++i)
                     {
-                      if (auto it = code_object_map.find (code_objects_ids[i]);
-                          it != code_object_map.end ())
+                      if (false) //auto it = code_object_map.find (code_objects_ids[i]);
+                          //it != code_object_map.end ())
                         {
-                          fresh_map.emplace (code_objects_ids[i],
-                                            std::move (it->second));
+                          // fresh_map.emplace (code_objects_ids[i],
+                          //                   std::move (it->second));
                         }
                       else
                         {
@@ -1058,6 +1060,7 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
                   free (code_objects_ids);
                   std::swap (code_object_map, fresh_map);
               }
+              
             }
             else
               {
@@ -1178,15 +1181,15 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
                             agent_log (log_level_t::info, "Error while getting bp inst\n");
                           }
 
-                          // 3. write the bp instruction at the entry point
-                          size_t write_size = bp_inst_size;
-                          if (amd_dbgapi_status_t status = amd_dbgapi_write_memory (
-                                  g_proc_id, AMD_DBGAPI_WAVE_NONE, AMD_DBGAPI_LANE_NONE,
-                                  AMD_DBGAPI_ADDRESS_SPACE_GLOBAL, entry,
-                                  &write_size, bp_inst);
-                              status != AMD_DBGAPI_STATUS_SUCCESS) {
-                              agent_error ("amd_dbgapi_write_memory failed (rc=%d)", status);
-                          }
+                          // // 3. write the bp instruction at the entry point
+                          // size_t write_size = bp_inst_size;
+                          // if (amd_dbgapi_status_t status = amd_dbgapi_write_memory (
+                          //         g_proc_id, AMD_DBGAPI_WAVE_NONE, AMD_DBGAPI_LANE_NONE,
+                          //         AMD_DBGAPI_ADDRESS_SPACE_GLOBAL, entry,
+                          //         &write_size, bp_inst);
+                          //     status != AMD_DBGAPI_STATUS_SUCCESS) {
+                          //     agent_error ("amd_dbgapi_write_memory failed (rc=%d)", status);
+                          // }
 
                           // std::cout<<"Inserted breakpoint instruction \n"<<std::endl;
 
@@ -1359,13 +1362,17 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
       DBGAPI_CHECK (amd_dbgapi_wave_resume (
           wave_id, AMD_DBGAPI_RESUME_MODE_NORMAL,
           static_cast<amd_dbgapi_exceptions_t> (resume_exceptions)));
+          std::cout<<"Resumed wave "<<wave_id.handle<<std::endl;
     }
 
   DBGAPI_CHECK (amd_dbgapi_process_set_wave_creation (
       process_id, AMD_DBGAPI_WAVE_CREATION_NORMAL));
+  
+  std::cout<<"Set wave creation to normal"<<std::endl;
 
   DBGAPI_CHECK (amd_dbgapi_process_set_progress (process_id,
                                                 AMD_DBGAPI_PROGRESS_NORMAL));
+  std::cout<<"Set progress to normal"<<std::endl;
 }
 
 /* Main function of the accessory thread used to handle dbgapi.  The LISTEN_FD

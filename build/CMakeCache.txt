@@ -22,7 +22,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
-CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_BUILD_TYPE:STRING=Debug
 
 //Enable/Disable color output during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
@@ -140,7 +140,7 @@ CMAKE_INSTALL_MANDIR:PATH=
 CMAKE_INSTALL_OLDINCLUDEDIR:PATH=/usr/include
 
 //Install path prefix, prepended onto install directories.
-CMAKE_INSTALL_PREFIX:PATH=/home/rghadia/rocr_debug_agent_trace/install
+CMAKE_INSTALL_PREFIX:PATH=/usr/local
 
 //Run-time variable data (LOCALSTATEDIR/run)
 CMAKE_INSTALL_RUNSTATEDIR:PATH=
@@ -425,8 +425,8 @@ HIP_VERBOSE_BUILD:BOOL=OFF
 //Version of HIP as computed from hipcc
 HIP_VERSION:STRING=7.0.51831-a3e329ad8
 
-//The directory containing a CMake configuration file for amd-dbgapi.
-amd-dbgapi_DIR:PATH=/opt/rocm/lib/cmake/amd-dbgapi
+//No help, variable specified on the command line.
+amd-dbgapi_DIR:UNINITIALIZED=/home/rghadia/ROCdbgapi/build/lib/cmake/amd-dbgapi
 
 //Value Computed by CMake
 rocm-debug-agent-test_BINARY_DIR:STATIC=/home/rghadia/rocr_debug_agent_trace/build/test
@@ -746,7 +746,7 @@ HIP_run_make2cmake:INTERNAL=/opt/rocm/lib/cmake/hip/FindHIP/run_make2cmake.cmake
 //linker supports push/pop state
 _CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
 //CMAKE_INSTALL_PREFIX during last run
-_GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=/home/rghadia/rocr_debug_agent_trace/install
+_GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=/usr/local
 //Compiler reason failure
 _Python3_Compiler_REASON_FAILURE:INTERNAL=
 //Development reason failure
@@ -756,8 +756,6 @@ _Python3_EXECUTABLE:INTERNAL=/usr/bin/python3.10
 //Python3 Properties
 _Python3_INTERPRETER_PROPERTIES:INTERNAL=Python;3;10;12;64;;cpython-310-x86_64-linux-gnu;/usr/lib/python3.10;/usr/lib/python3.10;/usr/lib/python3/dist-packages;/usr/lib/python3/dist-packages
 _Python3_INTERPRETER_SIGNATURE:INTERNAL=b91b4035ecb3bb3f5760d35922531bcd
-//Interpreter reason failure
-_Python3_Interpreter_REASON_FAILURE:INTERNAL=
 //NumPy reason failure
 _Python3_NumPy_REASON_FAILURE:INTERNAL=
 

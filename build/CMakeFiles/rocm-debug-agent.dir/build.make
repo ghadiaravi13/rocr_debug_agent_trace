@@ -124,7 +124,7 @@ librocm-debug-agent.so.2.1.0: CMakeFiles/rocm-debug-agent.dir/src/code_object.cp
 librocm-debug-agent.so.2.1.0: CMakeFiles/rocm-debug-agent.dir/src/debug_agent.cpp.o
 librocm-debug-agent.so.2.1.0: CMakeFiles/rocm-debug-agent.dir/src/logging.cpp.o
 librocm-debug-agent.so.2.1.0: CMakeFiles/rocm-debug-agent.dir/build.make
-librocm-debug-agent.so.2.1.0: /opt/rocm/lib/librocm-dbgapi.so.0.77.3
+librocm-debug-agent.so.2.1.0: /home/rghadia/ROCdbgapi/build/lib/librocm-dbgapi.so.0.77.3
 librocm-debug-agent.so.2.1.0: /opt/rocm/lib/libhsa-runtime64.so
 librocm-debug-agent.so.2.1.0: /usr/lib/x86_64-linux-gnu/libelf.so
 librocm-debug-agent.so.2.1.0: /usr/lib/x86_64-linux-gnu/libdw.so

@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = -DAMD_INTERNAL_BUILD -DHAVE_MEMFD_CREATE -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS -Drocm_debug_agent_EXPORTS
 
-CXX_INCLUDES = -isystem /opt/rocm/include
+CXX_INCLUDES = -I/home/rghadia/ROCdbgapi/build/include/amd-dbgapi -isystem /opt/rocm/include
 
-CXX_FLAGS = -O3 -DNDEBUG -fPIC -Werror -Wall -fno-rtti -Wno-attributes -fvisibility=hidden -std=c++17
+CXX_FLAGS = -g -fPIC -Werror -Wall -fno-rtti -Wno-attributes -fvisibility=hidden -std=c++17
 
