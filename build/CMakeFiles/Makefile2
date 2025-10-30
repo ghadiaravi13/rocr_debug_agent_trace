@@ -151,9 +151,9 @@ test/CMakeFiles/rocm-debug-agent-no-dbgapifo.dir/clean:
 # Target rules for target test/CMakeFiles/rocm-debug-agent-test.dir
 
 # All Build rule for target.
-test/CMakeFiles/rocm-debug-agent-test.dir/all: test/CMakeFiles/rocm-debug-agent-no-dbgapifo.dir/all
 test/CMakeFiles/rocm-debug-agent-test.dir/all: test/CMakeFiles/snapshot_objfile_on_load-tgt.dir/all
 test/CMakeFiles/rocm-debug-agent-test.dir/all: test/CMakeFiles/save_code_objects-tgt.dir/all
+test/CMakeFiles/rocm-debug-agent-test.dir/all: test/CMakeFiles/rocm-debug-agent-no-dbgapifo.dir/all
 	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/rocm-debug-agent-test.dir/build.make test/CMakeFiles/rocm-debug-agent-test.dir/depend
 	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/rocm-debug-agent-test.dir/build.make test/CMakeFiles/rocm-debug-agent-test.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/rghadia/rocr_debug_agent_trace/build/CMakeFiles --progress-num=7,8,9,10,11,12,13,14,15 "Built target rocm-debug-agent-test"

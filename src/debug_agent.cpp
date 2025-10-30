@@ -1302,9 +1302,14 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
           stop_reason_bits ^= one_bit;
 
           switch (stop_reason)
+          // switch (static_cast<amd_dbgapi_wave_stop_reasons_t> (one_bit))
             {
             case AMD_DBGAPI_WAVE_STOP_REASON_NONE:
             case AMD_DBGAPI_WAVE_STOP_REASON_DEBUG_TRAP:
+            case AMD_DBGAPI_WAVE_STOP_REASON_TRAP:
+              /* TRAP from AMDGPU_TRAP_ON_ENTRY is a debug facility, not a real exception.
+                 Resume with EXCEPTION_NONE to avoid runtime abort. */
+              std::cout<<"Resuming from trap at wave "<<wave_id.handle<<std::endl;
               resume_exceptions |= AMD_DBGAPI_EXCEPTION_NONE;
               break;
 
@@ -1313,8 +1318,6 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
             
             case AMD_DBGAPI_WAVE_STOP_REASON_WATCHPOINT:
             case AMD_DBGAPI_WAVE_STOP_REASON_ASSERT_TRAP:
-            case AMD_DBGAPI_WAVE_STOP_REASON_TRAP:
-              std::cout<<"Resuming from trap at wave "<<wave_id.handle<<std::endl;
               resume_exceptions |= AMD_DBGAPI_EXCEPTION_WAVE_TRAP;
               break;
 

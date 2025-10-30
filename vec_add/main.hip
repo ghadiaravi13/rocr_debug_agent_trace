@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "../../Common/example_utils.hpp"
+#include "/home/rghadia/rocm-examples/Common/example_utils.hpp"
 
 #include <hip/hip_runtime.h>
 
