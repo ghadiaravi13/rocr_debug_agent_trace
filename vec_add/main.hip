@@ -60,7 +60,7 @@
 int main(int, char* argv[])
 {
     // Set the problem size
-    constexpr size_t size          = 100;
+    constexpr size_t size          = 1024;
     constexpr size_t size_in_bytes = size * sizeof(float);
 
     hipDeviceProp_t props;
@@ -95,10 +95,12 @@ int main(int, char* argv[])
     HIP_CHECK(hipMemcpy(d_in1, h_in1.data(), size_in_bytes, hipMemcpyHostToDevice));
     HIP_CHECK(hipMemcpy(d_in2, h_in2.data(), size_in_bytes, hipMemcpyHostToDevice));
 
-    // Set the number of blocks per kernel grid.
-    constexpr unsigned int grid_size = 1;
     // Set the number of threads per kernel block.
-    constexpr unsigned int threads_per_block = 32;
+    constexpr unsigned int threads_per_block = 1024;
+
+    // Set the number of blocks per kernel grid.
+    constexpr unsigned int grid_size = (size + threads_per_block - 1) / threads_per_block;
+    
 
     // Compute an absolute path to the module that we are going to load.
     // To do that, find the directory where the example executable is placed in from the 0th argument.

@@ -161,56 +161,6 @@ amd_dbgapi_client_process_get_info (
   return AMD_DBGAPI_STATUS_ERROR_INVALID_ARGUMENT;
 }
 
-//  amd_dbgapi_status_t
-//  amd_dbgapi_set_breakpoint(
-//      amd_dbgapi_global_address_t address,
-//      amd_dbgapi_breakpoint_id_t breakpoint_id)
-//  {  
-//     /* we need to store the current instruction at address into a buffer
-//     Then, we need to replace it with the breakpoint instruction.
-//     We can query breakpoint instruction by using */
-  
-//     // get the arch id
-//     uint32_t elf_mach = EF_AMDGPU_MACH_AMDGCN_GFX950;
-//     amd_dbgapi_architecture_id_t arch_id;
-//     DBGAPI_CHECK(amd_dbgapi_get_architecture(elf_mach, &arch_id));
-
-  
-//     // get the bp inst size
-//     amd_dbgapi_size_t * bp_inst_size;
-//     amd_dbgapi_status_t bp_size_st = amd_dbgapi_architecture_get_info(arch_id, AMD_DBGAPI_ARCHITECTURE_INFO_BREAKPOINT_INSTRUCTION_SIZE, sizeof(*bp_inst_size), bp_inst_size );
-//     if(bp_size_st!=AMD_DBGAPI_STATUS_SUCCESS){
-//       agent_log (log_level_t::info, "Error while getting bp inst size\n");
-//       return bp_size_st;
-//     }
-
-//     //malloc memory for bp inst, using the bp inst size
-//     void * bp_inst = malloc(*bp_inst_size);
-
-//     // now we use that to get the bp instruction
-//     amd_dbgapi_status_t bp_inst_st = amd_dbgapi_architecture_get_info(arch_id, AMD_DBGAPI_ARCHITECTURE_INFO_BREAKPOINT_INSTRUCTION, sizeof(*bp_inst), bp_inst );
-//     if(bp_inst_st!=AMD_DBGAPI_STATUS_SUCCESS){
-//       agent_log (log_level_t::info, "Error while getting bp inst\n");
-//       return bp_inst_st;
-//     }
-
-//     // disassemble instruction - print it, and use it's size to allocate buffer
-//     amd_dbgapi_size_t * inst_size;
-//     amd_dbgapi_status_t inst_size_st = amd_dbgapi_architecture_get_info(arch_id, AMD_DBGAPI_ARCHITECTURE_INFO_LARGEST_INSTRUCTION_SIZE, sizeof(*inst_size), inst_size );
-//     if(inst_size_st!=AMD_DBGAPI_STATUS_SUCCESS){
-//       agent_log (log_level_t::info, "Error while getting inst size\n");
-//       return inst_size_st;
-//     }
-
-//     // now let's insert the bp inst, and save the current inst at the address
-//     void * curr_inst = amd_dbgapi_xfer_global_memory(g_client_proc_id, address, )
-
-//     return AMD_DBGAPI_STATUS_SUCCESS;
-    
-  
-//     return AMD_DBGAPI_STATUS_ERROR;
-//  }
-
 amd_dbgapi_status_t
 amd_dbgapi_insert_breakpoint(
     amd_dbgapi_client_process_id_t client_process_id,
@@ -223,15 +173,6 @@ amd_dbgapi_insert_breakpoint(
         return AMD_DBGAPI_STATUS_SUCCESS;
     }
   
-  //  // NEW: Allow any address breakpoint
-    
-  //  {
-  //      std::lock_guard<std::mutex> lock(g_breakpoint_map_mutex);
-  //      g_breakpoint_map[address] = breakpoint_id;
-  //      agent_log(log_level_t::info, 
-  //                "Inserted breakpoint at address 0x%lx (id=%ld)", 
-  //                address, breakpoint_id.handle);
-  //  }
     return AMD_DBGAPI_STATUS_ERROR;
 }
 
@@ -247,23 +188,7 @@ amd_dbgapi_remove_breakpoint(
         g_rbrk_breakpoint_id.reset();
         return AMD_DBGAPI_STATUS_SUCCESS;
     }
-    
-  //  // NEW: Check if it's in our breakpoint map
-  //  {
-  //      std::lock_guard<std::mutex> lock(g_breakpoint_map_mutex);
-  //      for (auto it = g_breakpoint_map.begin(); it != g_breakpoint_map.end(); ++it)
-  //      {
-  //          if (it->second.handle == breakpoint_id.handle)
-  //          {
-  //              agent_log(log_level_t::info,
-  //                        "Removed breakpoint at address 0x%lx (id=%ld)",
-  //                        it->first, breakpoint_id.handle);
-  //              g_breakpoint_map.erase(it);
-  //              return AMD_DBGAPI_STATUS_SUCCESS;
-  //          }
-  //      }
-  //  }
-    
+      
     return AMD_DBGAPI_STATUS_ERROR;
 }
 
@@ -311,30 +236,10 @@ static amd_dbgapi_callbacks_t dbgapi_callbacks = {
 
   /* set_breakpoint callback.  */
   .insert_breakpoint = amd_dbgapi_insert_breakpoint,
-    //  [] (amd_dbgapi_client_process_id_t client_process_id,
-    //      amd_dbgapi_global_address_t address,
-    //      amd_dbgapi_breakpoint_id_t breakpoint_id) {
-    //    if (address == _amdgpu_r_debug.r_brk)
-    //      {
-    //        g_rbrk_breakpoint_id.emplace (breakpoint_id);
-    //        return AMD_DBGAPI_STATUS_SUCCESS;
-    //      }
-    //    return AMD_DBGAPI_STATUS_ERROR;
-    //  },
-
+    
   /* remove_breakpoint callback.  */
   .remove_breakpoint = amd_dbgapi_remove_breakpoint,
-    //  [] (amd_dbgapi_client_process_id_t client_process_id,
-    //      amd_dbgapi_breakpoint_id_t breakpoint_id) {
-    //    if (g_rbrk_breakpoint_id.has_value ()
-    //        && breakpoint_id.handle == g_rbrk_breakpoint_id.value ().handle)
-    //      {
-    //        g_rbrk_breakpoint_id.reset ();
-    //        return AMD_DBGAPI_STATUS_SUCCESS;
-    //      }
-    //    return AMD_DBGAPI_STATUS_ERROR;
-    //  },
-
+    
   /* xfer_global_memory callback.  */
   .xfer_global_memory = amd_dbgapi_xfer_global_memory,
 
@@ -947,9 +852,10 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
                       code_object_map_t &code_object_map)
 {
   /* Consume all events available in the queue.  */
-  std::cout<<"Processing dbgapi events..."<<std::endl;
+  agent_log (log_level_t::info, "Processing dbgapi events...");
   bool need_print_waves = false;
   bool wave_need_resume = false;
+  bool kernel_entry_matched = false;
   while (true)
     {
       amd_dbgapi_event_id_t event_id;
@@ -960,7 +866,7 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
       if (event_kind == AMD_DBGAPI_EVENT_KIND_NONE)
         break;
 
-      std::cout<<"Got event kind: "<<event_kind<<std::endl;
+      agent_log (log_level_t::info, "Got event kind: %d", event_kind);
 
       switch (event_kind)
         {
@@ -968,7 +874,7 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
           {
             /* Fetch the stop reason.  For a debug trap, we just resume
               execution.  */
-            std::cout<<"Got a wave stop event"<<std::endl;
+            agent_log (log_level_t::info, "Got a wave stop event");
             amd_dbgapi_wave_stop_reasons_t stop_reason;
             amd_dbgapi_wave_id_t wave_id;
             DBGAPI_CHECK (amd_dbgapi_event_get_info (
@@ -980,7 +886,6 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
             
             if(stop_reason == AMD_DBGAPI_WAVE_STOP_REASON_BREAKPOINT) {
                 agent_log (log_level_t::info, "Hit a breakpoint at wave_%ld", wave_id.handle);
-                std::cout<<"Hit a breakpoint at wave_"<<wave_id.handle<<std::endl;
                 wave_need_resume = true;
             }
 
@@ -993,7 +898,8 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
             if(stop_reason == AMD_DBGAPI_WAVE_STOP_REASON_TRAP){
               
               wave_need_resume = true;
-              std::cout<<"Stop reason trap "<<stop_reason<<std::endl;
+
+              agent_log (log_level_t::info, "Stop reason trap %d", stop_reason);
               
               amd_dbgapi_global_address_t pc;
               if (amd_dbgapi_wave_get_info (wave_id, 
@@ -1001,90 +907,88 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
                                             sizeof (pc), 
                                             &pc) == AMD_DBGAPI_STATUS_SUCCESS){
                   //disassemble instruction at pc
-                  std::cout<<"PC: "<<std::hex<<pc<<std::dec<<std::endl;
+                  agent_log (log_level_t::info, "PC: 0x%lx", pc);
                   amd_dbgapi_code_object_id_t *code_objects_ids;
                   size_t code_object_count;
                   DBGAPI_CHECK (amd_dbgapi_process_code_object_list (
                       process_id, &code_object_count, &code_objects_ids, nullptr));
 
                   code_object_map_t fresh_map;
-                  for (size_t i = 0; i < code_object_count; ++i)
-                    {
-                      if (false) //auto it = code_object_map.find (code_objects_ids[i]);
-                          //it != code_object_map.end ())
-                        {
-                          // fresh_map.emplace (code_objects_ids[i],
-                          //                   std::move (it->second));
+                  for (size_t i = 0; i < code_object_count && !kernel_entry_matched; ++i)
+                  {
+                    code_object_t code_object (code_objects_ids[i]);
+
+                    code_object.open ();
+                    if (!code_object.is_open ())
+                      {
+                        agent_warning ("could not open code_object_%ld",
+                                      code_objects_ids[i].handle);
+                        continue;
+                      }
+
+                    /* If we were asked to break at a kernel entry, search
+                      for the symbol now and program a breakpoint.  */
+                    if (g_break_kernel_name)
+                      {
+                        amd_dbgapi_global_address_t entry = code_object.find_symbol_by_name (*g_break_kernel_name); 
+                        // std::cout<<"Entry: 0x"<<std::hex<<entry<<std::dec<<std::endl;
+                        if (entry==pc){
+
+                          kernel_entry_matched = true;
+                          agent_log (log_level_t::info, "Kernel entry matched at 0x%lx", pc);
+
+                          // we need to print the waves for this kernel since it matches our kernel_name
+                          need_print_waves = true;
+                          // get the arch id
+                          uint32_t elf_mach = 0x04f; //EF_AMDGPU_MACH for gfx950; //_AMDGCN_GFX950;
+                          amd_dbgapi_architecture_id_t arch_id;
+                          DBGAPI_CHECK(amd_dbgapi_get_architecture(elf_mach, &arch_id));
+              
+                          /* kernel name: Disassemble instructions around `pc`  */
+                          std::string dis_inst;
+                          std::optional<size_t> inst_size = code_object.disassemble_single (arch_id, pc, &dis_inst);
+                          // print the size
+                          if (inst_size) {
+                              std::cout<<"Disassembly of trap pc at entry"<<std::hex<<pc<<std::dec<<":\n"<<dis_inst<<", size:"<<*inst_size<<std::endl;
+                          } 
+                          else {
+                              std::cout<<"Failed to disassemble at 0x"<<std::hex<<pc<<std::endl;
+                          }
                         }
-                      else
-                        {
-                          code_object_t code_object (code_objects_ids[i]);
-
-                          code_object.open ();
-                          if (!code_object.is_open ())
-                            {
-                              agent_warning ("could not open code_object_%ld",
-                                            code_objects_ids[i].handle);
-                              continue;
-                            }
-
-                          /* If we were asked to break at a kernel entry, search
-                            for the symbol now and program a breakpoint.  */
-                          if (true)//g_break_kernel_name && !g_kernel_entry_breakpoint_id)
-                            {
-                              // amd_dbgapi_global_address_t entry = code_object.find_symbol_by_name (*g_break_kernel_name); 
-                              if (true){ // entry!=0){
-                                // get the arch id
-                                uint32_t elf_mach = 0x04f; //EF_AMDGPU_MACH for gfx950; //_AMDGCN_GFX950;
-                                amd_dbgapi_architecture_id_t arch_id;
-                                DBGAPI_CHECK(amd_dbgapi_get_architecture(elf_mach, &arch_id));
-                    
-                                /* kernel name: Disassemble instructions around `pc`  */
-                                std::string dis_inst;
-                                std::optional<size_t> inst_size = code_object.disassemble_single (arch_id, pc, &dis_inst);
-                                // print the size
-                                if (inst_size) {
-                                    std::cout<<"Disassembly of trap pc at entry"<<std::hex<<pc<<std::dec<<":\n"<<dis_inst<<", size:"<<*inst_size<<std::endl;
-                                } 
-                                else {
-                                    std::cout<<"Failed to disassemble at 0x"<<std::hex<<pc<<std::endl;
-                                }
-
-                              }
-                            }
-
-                          fresh_map.emplace (code_objects_ids[i],
-                                            std::move (code_object));
-                        }
+                      }      
                     }
-                  free (code_objects_ids);
-                  std::swap (code_object_map, fresh_map);
               }
               
             }
-            else
-              {
-                need_print_waves = true;
+            if(stop_reason == AMD_DBGAPI_WAVE_STOP_REASON_SINGLE_STEP){
+              wave_need_resume = true;
+              need_print_waves = true;
+              kernel_entry_matched = true;
+              agent_log (log_level_t::info, "Stop reason single step %d", stop_reason);
+            }
+            // else
+            //   {
+            //     need_print_waves = true;
 
-                /* If we are breaking on a specific kernel entry and HOLD mode
-                  is enabled, detect if the PC equals that entry and engage
-                  hold: turn off forward progress and wave creation (done
-                  later) and keep waves halted until manual continue.  */
-                if (g_hold_all_waves.load (std::memory_order::memory_order_relaxed)
-                    && g_kernel_entry_address)
-                  {
-                    amd_dbgapi_global_address_t pc;
-                    if (amd_dbgapi_wave_get_info (
-                            wave_id, AMD_DBGAPI_WAVE_INFO_PC, sizeof (pc), &pc)
-                        == AMD_DBGAPI_STATUS_SUCCESS)
-                      {
-                        if (pc == *g_kernel_entry_address)
-                          {
-                            g_hold_active.store (true, std::memory_order::memory_order_relaxed);
-                          }
-                      }
-                  }
-              }
+            //     /* If we are breaking on a specific kernel entry and HOLD mode
+            //       is enabled, detect if the PC equals that entry and engage
+            //       hold: turn off forward progress and wave creation (done
+            //       later) and keep waves halted until manual continue.  */
+            //     if (g_hold_all_waves.load (std::memory_order::memory_order_relaxed)
+            //         && g_kernel_entry_address)
+            //       {
+            //         amd_dbgapi_global_address_t pc;
+            //         if (amd_dbgapi_wave_get_info (
+            //                 wave_id, AMD_DBGAPI_WAVE_INFO_PC, sizeof (pc), &pc)
+            //             == AMD_DBGAPI_STATUS_SUCCESS)
+            //           {
+            //             if (pc == *g_kernel_entry_address)
+            //               {
+            //                 g_hold_active.store (true, std::memory_order::memory_order_relaxed);
+            //               }
+            //           }
+            //       }
+            //   }
             break;
           }
 
@@ -1150,36 +1054,36 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
                             } else {
                                 std::cout<<"Failed to disassemble at 0x"<<std::hex<<entry<<std::endl;
                             }
-                          // code_object.disassemble(arch_id, entry);
+                          // // code_object.disassemble(arch_id, entry);
 
-                          // INSERTING BREAKPOINT INSTRUCTION AT ENTRY
+                          // // INSERTING BREAKPOINT INSTRUCTION AT ENTRY
 
-                          // 1. read the original instruction and store it in buffer
-                          void * orig_inst = malloc(*inst_size);
-                          size_t read_size = *inst_size;
-                          if (amd_dbgapi_status_t status = amd_dbgapi_read_memory (
-                                  g_proc_id, AMD_DBGAPI_WAVE_NONE, AMD_DBGAPI_LANE_NONE,
-                                  AMD_DBGAPI_ADDRESS_SPACE_GLOBAL, entry,
-                                  &read_size, orig_inst);
-                              status != AMD_DBGAPI_STATUS_SUCCESS) {
-                              agent_error ("amd_dbgapi_read_memory failed (rc=%d)", status);
-                          }
+                          // // 1. read the original instruction and store it in buffer
+                          // void * orig_inst = malloc(*inst_size);
+                          // size_t read_size = *inst_size;
+                          // if (amd_dbgapi_status_t status = amd_dbgapi_read_memory (
+                          //         g_proc_id, AMD_DBGAPI_WAVE_NONE, AMD_DBGAPI_LANE_NONE,
+                          //         AMD_DBGAPI_ADDRESS_SPACE_GLOBAL, entry,
+                          //         &read_size, orig_inst);
+                          //     status != AMD_DBGAPI_STATUS_SUCCESS) {
+                          //     agent_error ("amd_dbgapi_read_memory failed (rc=%d)", status);
+                          // }
 
-                          // 2. get the arch specific breakpoint instruction
-                          amd_dbgapi_size_t bp_inst_size = 0;
-                          amd_dbgapi_status_t bp_size_st = amd_dbgapi_architecture_get_info(arch_id, AMD_DBGAPI_ARCHITECTURE_INFO_BREAKPOINT_INSTRUCTION_SIZE, sizeof(bp_inst_size), &bp_inst_size );
-                          if(bp_size_st!=AMD_DBGAPI_STATUS_SUCCESS){
-                            agent_log (log_level_t::info, "Error while getting bp inst size\n");
-                          }
+                          // // 2. get the arch specific breakpoint instruction
+                          // amd_dbgapi_size_t bp_inst_size = 0;
+                          // amd_dbgapi_status_t bp_size_st = amd_dbgapi_architecture_get_info(arch_id, AMD_DBGAPI_ARCHITECTURE_INFO_BREAKPOINT_INSTRUCTION_SIZE, sizeof(bp_inst_size), &bp_inst_size );
+                          // if(bp_size_st!=AMD_DBGAPI_STATUS_SUCCESS){
+                          //   agent_log (log_level_t::info, "Error while getting bp inst size\n");
+                          // }
 
-                          //malloc memory for bp inst, using the bp inst size
-                          void * bp_inst = malloc(bp_inst_size);
+                          // //malloc memory for bp inst, using the bp inst size
+                          // void * bp_inst = malloc(bp_inst_size);
 
-                          // now we use that to get the bp instruction
-                          amd_dbgapi_status_t bp_inst_st = amd_dbgapi_architecture_get_info(arch_id, AMD_DBGAPI_ARCHITECTURE_INFO_BREAKPOINT_INSTRUCTION, bp_inst_size, bp_inst );
-                          if(bp_inst_st!=AMD_DBGAPI_STATUS_SUCCESS){
-                            agent_log (log_level_t::info, "Error while getting bp inst\n");
-                          }
+                          // // now we use that to get the bp instruction
+                          // amd_dbgapi_status_t bp_inst_st = amd_dbgapi_architecture_get_info(arch_id, AMD_DBGAPI_ARCHITECTURE_INFO_BREAKPOINT_INSTRUCTION, bp_inst_size, bp_inst );
+                          // if(bp_inst_st!=AMD_DBGAPI_STATUS_SUCCESS){
+                          //   agent_log (log_level_t::info, "Error while getting bp inst\n");
+                          // }
 
                           // // 3. write the bp instruction at the entry point
                           // size_t write_size = bp_inst_size;
@@ -1225,13 +1129,16 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
           }
 
         case AMD_DBGAPI_EVENT_KIND_RUNTIME: 
-          std::cout<<"Got a runtime event"<<std::endl;
+          agent_log (log_level_t::info, "Got a runtime event");
           
         case AMD_DBGAPI_EVENT_KIND_BREAKPOINT_RESUME:
           /* Ignore.  */
-          std::cout<<"Got a breakpoint resume event"<<std::endl;
+          agent_log (log_level_t::info, "Got a breakpoint resume event");
           break;
 
+        case AMD_DBGAPI_EVENT_KIND_WAVE_COMMAND_TERMINATED:
+          agent_log (log_level_t::info, "Got a wave command terminated event");
+          break;
         default:
           agent_log (log_level_t::warning, "Unexpected event kind %d",
                     event_kind);
@@ -1257,17 +1164,9 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
       process_id, AMD_DBGAPI_WAVE_CREATION_STOP));
 
   if (need_print_waves)
+    // std::cout<<"Printing waves"<<std::endl;
     print_wavefronts (process_id, all_wavefronts, code_object_map);
 
-  /* We now need to resume execution of the waves present unless HOLD is
-    active. This will allow any exception to be delivered to the runtime who
-    will be able to act on it if required.  */
-  if (g_hold_active.load (std::memory_order::memory_order_relaxed))
-    {
-      /* Do not resume; keep creation STOP and progress NO_FORWARD until
-        manual continue clears g_hold_active.  */
-      return;
-    }
 
   /* Otherwise resume waves normally.  */
   amd_dbgapi_wave_id_t *wave_ids;
@@ -1307,14 +1206,21 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
             case AMD_DBGAPI_WAVE_STOP_REASON_NONE:
             case AMD_DBGAPI_WAVE_STOP_REASON_DEBUG_TRAP:
             case AMD_DBGAPI_WAVE_STOP_REASON_TRAP:
-              /* TRAP from AMDGPU_TRAP_ON_ENTRY is a debug facility, not a real exception.
-                 Resume with EXCEPTION_NONE to avoid runtime abort. */
-              std::cout<<"Resuming from trap at wave "<<wave_id.handle<<std::endl;
-              resume_exceptions |= AMD_DBGAPI_EXCEPTION_NONE;
+                /* TRAP from AMDGPU_TRAP_ON_ENTRY is a debug facility, not a real exception.
+                  Resume with EXCEPTION_NONE to avoid runtime abort. */
+                if (char *trap_on_entry = getenv ("AMDGPU_TRAP_ON_ENTRY");
+                trap_on_entry != nullptr){
+                  agent_log (log_level_t::info, "Resuming from trap on entry at wave %ld", wave_id.handle);
+                  resume_exceptions |= AMD_DBGAPI_EXCEPTION_NONE;
+                }
+                else{
+                  agent_log (log_level_t::info, "Resuming from trap at wave %ld", wave_id.handle);
+                  resume_exceptions |= AMD_DBGAPI_EXCEPTION_WAVE_TRAP;
+                }
               break;
 
             case AMD_DBGAPI_WAVE_STOP_REASON_BREAKPOINT:
-              std::cout<<"Hit breakpoint at wave "<<wave_id.handle<<std::endl;
+              agent_log (log_level_t::info, "Hit breakpoint at wave %ld", wave_id.handle);
             
             case AMD_DBGAPI_WAVE_STOP_REASON_WATCHPOINT:
             case AMD_DBGAPI_WAVE_STOP_REASON_ASSERT_TRAP:
@@ -1323,6 +1229,7 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
 
             case AMD_DBGAPI_WAVE_STOP_REASON_SINGLE_STEP:
               /* Is this even possible?  */
+              std::cout<<"Single step mode"<<std::endl;
               resume_exceptions |= AMD_DBGAPI_EXCEPTION_NONE;
               break;
 
@@ -1362,20 +1269,30 @@ process_dbgapi_events (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
             }
       } while (stop_reason_bits != 0);
 
-      DBGAPI_CHECK (amd_dbgapi_wave_resume (
+
+      if (kernel_entry_matched){
+        DBGAPI_CHECK (amd_dbgapi_wave_resume (
+          wave_id, AMD_DBGAPI_RESUME_MODE_SINGLE_STEP,
+          static_cast<amd_dbgapi_exceptions_t> (resume_exceptions)));
+          std::cout<<"Resumed wave "<<wave_id.handle<<" in single step mode from trap"<<std::endl;
+          agent_log (log_level_t::info, "Resumed wave %ld in single step mode", wave_id.handle);
+        }
+      else{
+        DBGAPI_CHECK (amd_dbgapi_wave_resume (
           wave_id, AMD_DBGAPI_RESUME_MODE_NORMAL,
           static_cast<amd_dbgapi_exceptions_t> (resume_exceptions)));
-          std::cout<<"Resumed wave "<<wave_id.handle<<std::endl;
+        agent_log (log_level_t::info, "Resumed wave %ld in normal mode", wave_id.handle);
+      }
     }
 
   DBGAPI_CHECK (amd_dbgapi_process_set_wave_creation (
       process_id, AMD_DBGAPI_WAVE_CREATION_NORMAL));
   
-  std::cout<<"Set wave creation to normal"<<std::endl;
+  agent_log (log_level_t::info, "Set wave creation to normal");
 
   DBGAPI_CHECK (amd_dbgapi_process_set_progress (process_id,
                                                 AMD_DBGAPI_PROGRESS_NORMAL));
-  std::cout<<"Set progress to normal"<<std::endl;
+  agent_log (log_level_t::info, "Set progress to normal");
 }
 
 /* Main function of the accessory thread used to handle dbgapi.  The LISTEN_FD
