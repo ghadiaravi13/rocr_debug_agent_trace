@@ -49,8 +49,10 @@ DEALINGS WITH THE SOFTWARE.  */
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
+#include <fstream>
 #include <future>
 #include <iomanip>
 #include <iostream>
@@ -59,6 +61,7 @@ DEALINGS WITH THE SOFTWARE.  */
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -108,6 +111,7 @@ using code_object_map_t
     = std::unordered_map<amd_dbgapi_code_object_id_t, code_object_t>;
 
 std::optional<std::string> g_code_objects_dir;
+std::optional<std::string> g_snapshots_dir;
 bool g_all_wavefronts{ false };
 bool g_precise_emmory{ false };
 bool g_precise_alu_exceptions{ false };
@@ -298,19 +302,271 @@ register_value_string (const std::string &register_type,
   return hex_string (register_value);
 }
 
-void
-print_registers (amd_dbgapi_wave_id_t wave_id)
+// void
+// print_registers (amd_dbgapi_wave_id_t wave_id)
+// {
+//   amd_dbgapi_architecture_id_t architecture_id;
+//   DBGAPI_CHECK (
+//       amd_dbgapi_wave_get_info (wave_id, AMD_DBGAPI_WAVE_INFO_ARCHITECTURE,
+//                                 sizeof (architecture_id), &architecture_id));
+
+//   size_t class_count;
+//   amd_dbgapi_register_class_id_t *register_class_ids;
+//   DBGAPI_CHECK (amd_dbgapi_architecture_register_class_list (
+//       architecture_id, &class_count, &register_class_ids));
+
+//   size_t register_count;
+//   amd_dbgapi_register_id_t *register_ids;
+//   DBGAPI_CHECK (
+//       amd_dbgapi_wave_register_list (wave_id, &register_count, &register_ids));
+
+//   auto hash = [] (const amd_dbgapi_register_id_t &id) {
+//     return std::hash<decltype (id.handle)>{}(id.handle);
+//   };
+//   auto equal_to = [] (const amd_dbgapi_register_id_t &lhs,
+//                       const amd_dbgapi_register_id_t &rhs) {
+//     return std::equal_to<decltype (lhs.handle)>{}(lhs.handle, rhs.handle);
+//   };
+//   std::unordered_set<amd_dbgapi_register_id_t, decltype (hash),
+//                     decltype (equal_to)>
+//       printed_registers (0, hash, equal_to);
+
+//   for (size_t i = 0; i < class_count; ++i)
+//     {
+//       amd_dbgapi_register_class_id_t register_class_id = register_class_ids[i];
+
+//       char *class_name_;
+//       DBGAPI_CHECK (amd_dbgapi_architecture_register_class_get_info (
+//           register_class_id, AMD_DBGAPI_REGISTER_CLASS_INFO_NAME,
+//           sizeof (class_name_), &class_name_));
+//       std::string class_name (class_name_);
+//       free (class_name_);
+
+//       /* Always print the "general" register class last.  */
+//       if (class_name == "general" && i < (class_count - 1))
+//         {
+//           register_class_ids[i--] = register_class_ids[class_count - 1];
+//           register_class_ids[class_count - 1] = register_class_id;
+//           continue;
+//         }
+
+//       agent_out << std::endl << class_name << " registers:";
+
+//       size_t last_register_size = 0;
+//       for (size_t j = 0, column = 0; j < register_count; ++j)
+//         {
+//           amd_dbgapi_register_id_t register_id = register_ids[j];
+
+//           /* Skip this register if is has already been printed as part of
+//             another register class.  */
+//           if (printed_registers.find (register_id) != printed_registers.end ())
+//             continue;
+
+//           amd_dbgapi_register_class_state_t state;
+//           DBGAPI_CHECK (amd_dbgapi_register_is_in_register_class (
+//               register_class_id, register_id, &state));
+
+//           if (state != AMD_DBGAPI_REGISTER_CLASS_STATE_MEMBER)
+//             continue;
+
+//           char *register_name_;
+//           DBGAPI_CHECK (amd_dbgapi_register_get_info (
+//               register_id, AMD_DBGAPI_REGISTER_INFO_NAME,
+//               sizeof (register_name_), &register_name_));
+//           std::string register_name (register_name_);
+//           free (register_name_);
+
+//           char *register_type_;
+//           DBGAPI_CHECK (amd_dbgapi_register_get_info (
+//               register_id, AMD_DBGAPI_REGISTER_INFO_TYPE,
+//               sizeof (register_type_), &register_type_));
+//           std::string register_type (register_type_);
+//           free (register_type_);
+
+//           size_t register_size;
+//           DBGAPI_CHECK (amd_dbgapi_register_get_info (
+//               register_id, AMD_DBGAPI_REGISTER_INFO_SIZE,
+//               sizeof (register_size), &register_size));
+
+//           std::vector<uint8_t> buffer (register_size);
+//           DBGAPI_CHECK (amd_dbgapi_read_register (
+//               wave_id, register_id, 0, register_size, buffer.data ()));
+
+//           const size_t num_register_per_line = 16 / register_size;
+
+//           if (register_size > sizeof (uint64_t) /* Registers larger than a
+//                                                   uint64_t are printed each
+//                                                   on a separate line.  */
+//               || register_size != last_register_size
+//               || (column++ % num_register_per_line) == 0)
+//             {
+//               agent_out << std::endl;
+//               column = 1;
+//             }
+
+//           last_register_size = register_size;
+
+//           agent_out << std::right << std::setfill (' ') << std::setw (16)
+//                     << (register_name + ": ")
+//                     << register_value_string (register_type, buffer);
+
+//           printed_registers.emplace (register_id);
+//         }
+
+//       agent_out << std::endl;
+//     }
+
+//   free (register_ids);
+//   free (register_class_ids);
+// }
+
+/* Helper function to escape JSON strings */
+std::string
+json_escape (const std::string &s)
 {
+  std::string result;
+  for (char c : s)
+    {
+      switch (c)
+        {
+        case '"':
+          result += "\\\"";
+          break;
+        case '\\':
+          result += "\\\\";
+          break;
+        case '\b':
+          result += "\\b";
+          break;
+        case '\f':
+          result += "\\f";
+          break;
+        case '\n':
+          result += "\\n";
+          break;
+        case '\r':
+          result += "\\r";
+          break;
+        case '\t':
+          result += "\\t";
+          break;
+        default:
+          if (c < 0x20)
+            {
+              char buf[7];
+              snprintf (buf, sizeof (buf), "\\u%04x", c);
+              result += buf;
+            }
+          else
+            result += c;
+        }
+    }
+  return result;
+}
+
+/* Helper function to convert bytes to hex string for JSON */
+std::string
+bytes_to_json_array (const std::vector<uint8_t> &bytes)
+{
+  std::ostringstream ss;
+  ss << "[";
+  for (size_t i = 0; i < bytes.size (); ++i)
+    {
+      if (i > 0)
+        ss << ",";
+      ss << static_cast<int> (bytes[i]);
+    }
+  ss << "]";
+  return ss.str ();
+}
+
+/* Get current timestamp in ISO 8601 format */
+std::string
+get_iso_timestamp ()
+{
+  auto now = std::chrono::system_clock::now ();
+  auto time_t_now = std::chrono::system_clock::to_time_t (now);
+  auto ms = std::chrono::duration_cast<std::chrono::milliseconds> (
+                now.time_since_epoch ())
+            % 1000;
+
+  std::tm tm_now;
+  localtime_r (&time_t_now, &tm_now);
+
+  std::ostringstream ss;
+  ss << std::put_time (&tm_now, "%Y-%m-%dT%H:%M:%S") << '.' << std::setfill ('0')
+     << std::setw (3) << ms.count ();
+  return ss.str ();
+}
+
+/* Snapshot all register values for a wave and export to JSON format.
+   Returns the JSON string. Can optionally write to a file. */
+std::string
+snapshot_registers (amd_dbgapi_wave_id_t wave_id,
+                   amd_dbgapi_wave_stop_reasons_t stop_reason = AMD_DBGAPI_WAVE_STOP_REASON_NONE,
+                   const std::string &disassembly = "",
+                   const std::string *output_dir = nullptr)
+{
+  std::ostringstream json;
+
+  // Get wave metadata
   amd_dbgapi_architecture_id_t architecture_id;
   DBGAPI_CHECK (
       amd_dbgapi_wave_get_info (wave_id, AMD_DBGAPI_WAVE_INFO_ARCHITECTURE,
                                 sizeof (architecture_id), &architecture_id));
 
+  amd_dbgapi_global_address_t pc = 0;
+  amd_dbgapi_wave_get_info (wave_id, AMD_DBGAPI_WAVE_INFO_PC, sizeof (pc),
+                            &pc);
+
+  // Get architecture name
+  char *arch_name_ = nullptr;
+  amd_dbgapi_architecture_get_info (architecture_id,
+                                    AMD_DBGAPI_ARCHITECTURE_INFO_NAME,
+                                    sizeof (arch_name_), &arch_name_);
+  std::string arch_name = arch_name_ ? arch_name_ : "unknown";
+  free (arch_name_);
+
+  // Get dispatch ID and kernel info if available
+  std::optional<amd_dbgapi_global_address_t> kernel_entry;
+  std::string kernel_name = "unknown";
+  amd_dbgapi_dispatch_id_t dispatch_id;
+  if (amd_dbgapi_wave_get_info (wave_id, AMD_DBGAPI_WAVE_INFO_DISPATCH,
+                                sizeof (dispatch_id), &dispatch_id)
+      == AMD_DBGAPI_STATUS_SUCCESS)
+    {
+      amd_dbgapi_global_address_t entry;
+      if (amd_dbgapi_dispatch_get_info (
+              dispatch_id, AMD_DBGAPI_DISPATCH_INFO_KERNEL_CODE_ENTRY_ADDRESS,
+              sizeof (entry), &entry)
+          == AMD_DBGAPI_STATUS_SUCCESS)
+        {
+          kernel_entry = entry;
+        }
+
+      // Note: AMD_DBGAPI_DISPATCH_INFO_KERNEL_FUNCTION_NAME may not be available
+      // in all versions of the dbgapi. Kernel name will be "unknown" for now.
+    }
+
+  // Build a single snapshot entry
+  json << "    {\n";
+  json << "      \"timestamp\": \"" << get_iso_timestamp () << "\",\n";
+  json << "      \"pc\": \"0x" << std::hex << pc << std::dec << "\",\n";
+  json << "      \"stop_reason\": " << static_cast<uint64_t> (stop_reason) << ",\n";
+  json << "      \"disassembly\": \"" << json_escape (disassembly) << "\",\n";
+  if (kernel_entry)
+    json << "      \"kernel_entry\": \"0x" << std::hex << *kernel_entry << std::dec
+         << "\",\n";
+  else
+    json << "      \"kernel_entry\": null,\n";
+
+  // Get register classes
   size_t class_count;
   amd_dbgapi_register_class_id_t *register_class_ids;
   DBGAPI_CHECK (amd_dbgapi_architecture_register_class_list (
       architecture_id, &class_count, &register_class_ids));
 
+  // Get all registers for this wave
   size_t register_count;
   amd_dbgapi_register_id_t *register_ids;
   DBGAPI_CHECK (
@@ -327,6 +583,9 @@ print_registers (amd_dbgapi_wave_id_t wave_id)
                     decltype (equal_to)>
       printed_registers (0, hash, equal_to);
 
+  json << "      \"register_classes\": [\n";
+
+  // Iterate through register classes
   for (size_t i = 0; i < class_count; ++i)
     {
       amd_dbgapi_register_class_id_t register_class_id = register_class_ids[i];
@@ -338,7 +597,7 @@ print_registers (amd_dbgapi_wave_id_t wave_id)
       std::string class_name (class_name_);
       free (class_name_);
 
-      /* Always print the "general" register class last.  */
+      // Always print the "general" register class last
       if (class_name == "general" && i < (class_count - 1))
         {
           register_class_ids[i--] = register_class_ids[class_count - 1];
@@ -346,15 +605,16 @@ print_registers (amd_dbgapi_wave_id_t wave_id)
           continue;
         }
 
-      agent_out << std::endl << class_name << " registers:";
+      json << "        {\n";
+      json << "          \"class_name\": \"" << json_escape (class_name) << "\",\n";
+      json << "          \"registers\": [\n";
 
-      size_t last_register_size = 0;
-      for (size_t j = 0, column = 0; j < register_count; ++j)
+      bool first_register = true;
+      for (size_t j = 0; j < register_count; ++j)
         {
           amd_dbgapi_register_id_t register_id = register_ids[j];
 
-          /* Skip this register if is has already been printed as part of
-            another register class.  */
+          // Skip if already printed
           if (printed_registers.find (register_id) != printed_registers.end ())
             continue;
 
@@ -385,35 +645,145 @@ print_registers (amd_dbgapi_wave_id_t wave_id)
               sizeof (register_size), &register_size));
 
           std::vector<uint8_t> buffer (register_size);
-          DBGAPI_CHECK (amd_dbgapi_read_register (
-              wave_id, register_id, 0, register_size, buffer.data ()));
-
-          const size_t num_register_per_line = 16 / register_size;
-
-          if (register_size > sizeof (uint64_t) /* Registers larger than a
-                                                  uint64_t are printed each
-                                                  on a separate line.  */
-              || register_size != last_register_size
-              || (column++ % num_register_per_line) == 0)
+          if (amd_dbgapi_read_register (wave_id, register_id, 0, register_size,
+                                        buffer.data ())
+              != AMD_DBGAPI_STATUS_SUCCESS)
             {
-              agent_out << std::endl;
-              column = 1;
+              // Skip registers that can't be read
+              continue;
             }
 
-          last_register_size = register_size;
+          if (!first_register)
+            json << ",\n";
+          first_register = false;
 
-          agent_out << std::right << std::setfill (' ') << std::setw (16)
-                    << (register_name + ": ")
-                    << register_value_string (register_type, buffer);
+          json << "            {\n";
+          json << "              \"name\": \"" << json_escape (register_name)
+               << "\",\n";
+          json << "              \"type\": \"" << json_escape (register_type)
+               << "\",\n";
+          json << "              \"size\": " << register_size << ",\n";
+          json << "              \"value\": \""
+               << register_value_string (register_type, buffer) << "\",\n";
+          json << "              \"raw_bytes\": " << bytes_to_json_array (buffer)
+               << "\n";
+          json << "            }";
 
           printed_registers.emplace (register_id);
         }
 
-      agent_out << std::endl;
+      json << "\n          ]\n";
+      json << "        }";
+      if (i < class_count - 1)
+        json << ",";
+      json << "\n";
     }
+
+  json << "      ]\n";
+  json << "    }";
 
   free (register_ids);
   free (register_class_ids);
+
+  std::string snapshot_entry = json.str ();
+
+  // Optionally write to file (append mode)
+  if (output_dir)
+    {
+      std::ostringstream filename;
+      filename << *output_dir << "/wave_" << wave_id.handle << ".json";
+      std::string filepath = filename.str ();
+
+      // Read existing file if it exists
+      std::ifstream infile (filepath);
+      std::vector<std::string> existing_snapshots;
+      bool file_exists = infile.good ();
+      
+      if (file_exists)
+        {
+          std::string line;
+          std::string file_content;
+          while (std::getline (infile, line))
+            {
+              file_content += line + "\n";
+            }
+          infile.close ();
+
+          // Simple parser: extract existing snapshots
+          // Look for the snapshots array and extract individual snapshot objects
+          size_t snapshots_start = file_content.find ("\"snapshots\": [");
+          if (snapshots_start != std::string::npos)
+            {
+              size_t array_start = file_content.find ("[", snapshots_start);
+              size_t array_end = file_content.rfind ("]");
+              
+              if (array_start != std::string::npos && array_end != std::string::npos)
+                {
+                  std::string snapshots_content = file_content.substr (
+                      array_start + 1, array_end - array_start - 1);
+                  
+                  // Extract individual snapshot objects (simple approach)
+                  size_t pos = 0;
+                  int brace_count = 0;
+                  size_t obj_start = snapshots_content.find_first_not_of (" \n\t", pos);
+                  
+                  for (size_t i = 0; i < snapshots_content.length (); ++i)
+                    {
+                      if (snapshots_content[i] == '{')
+                        {
+                          if (brace_count == 0)
+                            obj_start = i;
+                          brace_count++;
+                        }
+                      else if (snapshots_content[i] == '}')
+                        {
+                          brace_count--;
+                          if (brace_count == 0 && obj_start != std::string::npos)
+                            {
+                              existing_snapshots.push_back (
+                                  snapshots_content.substr (obj_start, i - obj_start + 1));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+      // Write complete file with all snapshots
+      std::ofstream outfile (filepath);
+      if (outfile.is_open ())
+        {
+          outfile << "{\n";
+          outfile << "  \"wave_id\": " << wave_id.handle << ",\n";
+          outfile << "  \"architecture\": \"" << json_escape (arch_name) << "\",\n";
+          outfile << "  \"kernel_name\": \"" << json_escape (kernel_name) << "\",\n";
+          outfile << "  \"snapshots\": [\n";
+          
+          // Write existing snapshots
+          for (size_t i = 0; i < existing_snapshots.size (); ++i)
+            {
+              outfile << "    " << existing_snapshots[i];
+              outfile << ",\n";
+            }
+          
+          // Write new snapshot
+          outfile << snapshot_entry << "\n";
+          
+          outfile << "  ]\n";
+          outfile << "}\n";
+          outfile.close ();
+          
+          agent_log (log_level_t::info, "Appended register snapshot to %s (total: %zu snapshots)",
+                    filepath.c_str (), existing_snapshots.size () + 1);
+        }
+      else
+        {
+          agent_warning ("Failed to write register snapshot to %s",
+                        filepath.c_str ());
+        }
+    }
+
+  return snapshot_entry;
 }
 
 void
@@ -765,23 +1135,36 @@ print_wavefronts (amd_dbgapi_process_id_t process_id, bool all_wavefronts,
         agent_out << "running";
       agent_out << ")" << std::endl;
 
-      print_registers (wave_id);
-      print_local_memory (wave_id);
-
+      // Get disassembly for the current PC
+      std::string disassembly = "N/A";
+      amd_dbgapi_architecture_id_t architecture_id;
+      
       if (code_object_found)
         {
-          amd_dbgapi_architecture_id_t architecture_id;
           DBGAPI_CHECK (amd_dbgapi_wave_get_info (
               wave_id, AMD_DBGAPI_WAVE_INFO_ARCHITECTURE,
               sizeof (architecture_id), &architecture_id));
 
-          /* Disassemble instructions around `pc`  */
+          // Get single instruction disassembly
+          std::string dis_inst;
+          std::optional<size_t> inst_size = code_object_found->disassemble_single (architecture_id, pc, &dis_inst);
+          if (inst_size && !dis_inst.empty())
+            {
+              disassembly = dis_inst;
+            }
+
+          /* Disassemble instructions around `pc` for logging */
           code_object_found->disassemble (architecture_id, pc);
         }
-      else
+      
+      // Snapshot registers to JSON (with disassembly)
+      if (g_snapshots_dir)
         {
-          /* TODO: Add disassembly even if we did not find a code object  */
+          snapshot_registers (wave_id, static_cast<amd_dbgapi_wave_stop_reasons_t>(stop_reason), 
+                            disassembly, &(*g_snapshots_dir));
         }
+      
+      print_local_memory (wave_id);
     }
 
   free (wave_ids);
@@ -802,6 +1185,15 @@ print_usage ()
             << std::endl
             << "                              "
               "the current directory."
+            << std::endl;
+  std::cerr << "  -r, --snapshot-registers[=DIR]  "
+              "Export register snapshots to JSON files."
+            << std::endl
+            << "                              "
+              "If the directory is not specified, snapshots are"
+            << std::endl
+            << "                              "
+              "saved in the current directory."
             << std::endl;
   std::cerr << "  -p, --precise-memory        "
             << "Enable precise memory mode which ensures that " << std::endl
@@ -1767,6 +2159,7 @@ OnLoad (void *table, uint64_t runtime_version, uint64_t failed_tool_count,
           { "log-level", required_argument, nullptr, 'l' },
           { "output", required_argument, nullptr, 'o' },
           { "save-code-objects", optional_argument, nullptr, 's' },
+          { "snapshot-registers", optional_argument, nullptr, 'r' },
           { "precise-memory", no_argument, nullptr, 'p' },
           { "precise-alu-exceptions", no_argument, nullptr, 'e' },
           { "break-kernel", required_argument, nullptr, 'k' },
@@ -1779,7 +2172,7 @@ OnLoad (void *table, uint64_t runtime_version, uint64_t failed_tool_count,
   int saved_optind = optind;
   optind = 1;
 
-  while (int c = getopt_long (argc, argv, ":as::o:dpel:k:ch", options, nullptr))
+  while (int c = getopt_long (argc, argv, ":as::r::o:dpel:k:ch", options, nullptr))
     {
       if (c == -1)
         break;
@@ -1856,6 +2249,27 @@ OnLoad (void *table, uint64_t runtime_version, uint64_t failed_tool_count,
           else
             {
               g_code_objects_dir = ".";
+            }
+          break;
+
+        case 'r': /* -r or --snapshot-registers  */
+          if (argument)
+            {
+              struct stat path_stat;
+              if (stat (argument->c_str (), &path_stat) == -1
+                  || !S_ISDIR (path_stat.st_mode))
+                {
+                  std::cerr
+                      << "error: Cannot access register snapshot directory `"
+                      << *argument << "'" << std::endl;
+                  print_usage ();
+                }
+
+              g_snapshots_dir = *argument;
+            }
+          else
+            {
+              g_snapshots_dir = ".";
             }
           break;
 
