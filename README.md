@@ -53,33 +53,27 @@ LD_LIBRARY_PATH=/path/to/ROCdbgapi/build/lib:$LD_LIBRARY_PATH \
 ./your_application
 ```
 
-### With Register Snapshots
+### With Register Snapshots and Kernel Tracing
+
+⚠️ **Note**: You must specify the kernel name with `-k` for register snapshots to work with `AMDGPU_TRAP_ON_ENTRY=1`.
 
 ```bash
 # Create snapshot directory
 mkdir -p ~/wave_snapshots
 
-# Run with snapshots enabled
-ROCM_DEBUG_AGENT_OPTIONS="--log-level info --snapshot-registers=~/wave_snapshots" \
-LD_LIBRARY_PATH=/path/to/ROCdbgapi/build/lib:$LD_LIBRARY_PATH \
-HSA_TOOLS_LIB=/path/to/rocr_debug_agent_trace/build/librocm-debug-agent.so.2 \
-./your_application
-```
-
-### With Trap-on-Entry
-
-```bash
-ROCM_DEBUG_AGENT_OPTIONS="--snapshot-registers=~/wave_snapshots" \
+# Run with snapshots enabled (replace 'your_kernel_name' with actual kernel name)
+ROCM_DEBUG_AGENT_OPTIONS="-k your_kernel_name --snapshot-registers=~/wave_snapshots" \
 LD_LIBRARY_PATH=/path/to/ROCdbgapi/build/lib:$LD_LIBRARY_PATH \
 AMDGPU_TRAP_ON_ENTRY=1 \
 HSA_TOOLS_LIB=/path/to/rocr_debug_agent_trace/build/librocm-debug-agent.so.2 \
 ./your_application
 ```
 
-### Target Specific Kernel
+### With Logging
 
 ```bash
-ROCM_DEBUG_AGENT_OPTIONS="--break-kernel=my_kernel --snapshot-registers=~/wave_snapshots" \
+# Add --log-level for detailed output
+ROCM_DEBUG_AGENT_OPTIONS="-k your_kernel_name --log-level info --snapshot-registers=~/wave_snapshots" \
 LD_LIBRARY_PATH=/path/to/ROCdbgapi/build/lib:$LD_LIBRARY_PATH \
 AMDGPU_TRAP_ON_ENTRY=1 \
 HSA_TOOLS_LIB=/path/to/rocr_debug_agent_trace/build/librocm-debug-agent.so.2 \
@@ -90,13 +84,15 @@ HSA_TOOLS_LIB=/path/to/rocr_debug_agent_trace/build/librocm-debug-agent.so.2 \
 
 Pass options via `ROCM_DEBUG_AGENT_OPTIONS` environment variable:
 
+- `-k NAME`, `--break-kernel=NAME`: **[Required]** Specify kernel name to trace
 - `-r [DIR]`, `--snapshot-registers[=DIR]`: Export register snapshots to JSON files
-- `-k NAME`, `--break-kernel=NAME`: Break at specific kernel entry
 - `-l LEVEL`, `--log-level=LEVEL`: Set log level (`none`, `info`, `warning`, `error`)
 - `-a`, `--all`: Print all wavefronts
 - `-s [DIR]`, `--save-code-objects[=DIR]`: Save loaded code objects
 - `-p`, `--precise-memory`: Enable precise memory mode
 - `-h`, `--help`: Display usage message
+
+**Note**: The `-k` option is required when using `AMDGPU_TRAP_ON_ENTRY=1` with register snapshots.
 
 ## Output Format
 
@@ -143,8 +139,11 @@ cd vec_add
 # Build the example
 make
 
-# Run with tracing
-ROCM_DEBUG_AGENT_OPTIONS="--break-kernel=vector_add_custom --snapshot-registers=./snapshots" \
+# Create snapshots directory
+mkdir -p ./snapshots
+
+# Run with tracing (kernel name is 'vector_add_custom')
+ROCM_DEBUG_AGENT_OPTIONS="-k vector_add_custom --snapshot-registers=./snapshots" \
 LD_LIBRARY_PATH=/path/to/ROCdbgapi/build/lib:$LD_LIBRARY_PATH \
 AMDGPU_TRAP_ON_ENTRY=1 \
 HSA_TOOLS_LIB=/path/to/rocr_debug_agent_trace/build/librocm-debug-agent.so.2 \
